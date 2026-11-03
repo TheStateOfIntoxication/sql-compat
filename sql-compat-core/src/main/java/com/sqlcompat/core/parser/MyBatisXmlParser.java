@@ -16,7 +16,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -25,7 +27,9 @@ import java.util.regex.Pattern;
  *
  * <p>Dynamic tags ({@code <if>}, {@code <where>}, {@code <foreach>}, ...) are flattened:
  * their text content is kept, the tag itself is dropped. That is enough for most textual
- * dialect checks and avoids needing a full MyBatis dynamic-SQL simulator.
+ * dialect checks and avoids needing a full MyBatis dynamic-SQL simulator. The tag names are
+ * still recorded on the statement, because a few rules (R011) need to know whether a
+ * {@code <foreach>} was involved.
  *
  * <p>The parser never touches the network: DTD loading is disabled, so a missing
  * {@code mybatis-3-mapper.dtd} will not fail the scan.
@@ -33,6 +37,10 @@ import java.util.regex.Pattern;
 public final class MyBatisXmlParser {
 
     private static final Set<String> STATEMENT_TAGS = Set.of("select", "insert", "update", "delete");
+
+    /** Tags worth remembering for rules. Anything else is dropped without a trace. */
+    private static final Set<String> TRACKED_TAGS = Set.of(
+            "if", "foreach", "choose", "when", "otherwise", "where", "set", "trim", "bind", "include");
 
     public List<SqlStatement> parse(Path xmlFile) throws IOException {
         String raw = Files.readString(xmlFile, StandardCharsets.UTF_8);
@@ -53,7 +61,8 @@ public final class MyBatisXmlParser {
                 if (id == null || id.isBlank()) {
                     continue;
                 }
-                String sql = flatten(element);
+                Set<String> dynamicTags = new LinkedHashSet<>();
+                String sql = flatten(element, dynamicTags);
                 if (sql.isBlank()) {
                     continue;
                 }
@@ -61,16 +70,18 @@ public final class MyBatisXmlParser {
                         namespace,
                         id,
                         sql,
-                        new SourceLocation(xmlFile.getFileName().toString(), findLine(raw, id))));
+                        new SourceLocation(xmlFile.getFileName().toString(), findLine(raw, id)),
+                        dynamicTags));
             }
         }
         return statements;
     }
 
     /**
-     * Flattens an element into plain SQL text: child tags are dropped, their text kept.
+     * Flattens an element into plain SQL text: child tags are dropped, their text kept,
+     * and tracked tag names are collected into {@code dynamicTags}.
      */
-    private String flatten(Node node) {
+    private String flatten(Node node, Set<String> dynamicTags) {
         StringBuilder sb = new StringBuilder();
         NodeList children = node.getChildNodes();
         for (int i = 0; i < children.getLength(); i++) {
@@ -78,7 +89,11 @@ public final class MyBatisXmlParser {
             if (child.getNodeType() == Node.TEXT_NODE || child.getNodeType() == Node.CDATA_SECTION_NODE) {
                 sb.append(child.getNodeValue());
             } else if (child.getNodeType() == Node.ELEMENT_NODE) {
-                sb.append(' ').append(flatten(child)).append(' ');
+                String tagName = child.getNodeName().toLowerCase(Locale.ROOT);
+                if (TRACKED_TAGS.contains(tagName)) {
+                    dynamicTags.add(tagName);
+                }
+                sb.append(' ').append(flatten(child, dynamicTags)).append(' ');
             }
         }
         return sb.toString().replaceAll("\\s+", " ").trim();
@@ -108,7 +123,8 @@ public final class MyBatisXmlParser {
             factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
             DocumentBuilder builder = factory.newDocumentBuilder();
             // Swallow DTD fetch errors: mapper files reference a DTD we do not ship.
-            builder.setEntityResolver((publicId, systemId) -> new org.xml.sax.InputSource(new java.io.StringReader("")));
+            builder.setEntityResolver((publicId, systemId) ->
+                    new org.xml.sax.InputSource(new java.io.StringReader("")));
             return builder.parse(xmlFile.toFile());
         } catch (ParserConfigurationException | org.xml.sax.SAXException e) {
             throw new IOException("Failed to parse mapper XML: " + xmlFile, e);

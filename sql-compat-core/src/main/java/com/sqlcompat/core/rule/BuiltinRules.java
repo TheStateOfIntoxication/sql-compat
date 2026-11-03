@@ -1,15 +1,20 @@
 package com.sqlcompat.core.rule;
 
 import com.sqlcompat.core.rule.builtin.AutoIncrementRule;
+import com.sqlcompat.core.rule.builtin.BacktickQuoteRule;
 import com.sqlcompat.core.rule.builtin.DateFormatRule;
 import com.sqlcompat.core.rule.builtin.DeleteUpdateLimitRule;
+import com.sqlcompat.core.rule.builtin.ForeachBindingRule;
 import com.sqlcompat.core.rule.builtin.GroupConcatRule;
 import com.sqlcompat.core.rule.builtin.IfnullRule;
+import com.sqlcompat.core.rule.builtin.IndexPrefixLengthRule;
 import com.sqlcompat.core.rule.builtin.InsertIgnoreRule;
 import com.sqlcompat.core.rule.builtin.JsonExtractRule;
+import com.sqlcompat.core.rule.builtin.OnUpdateTimestampRule;
 import com.sqlcompat.core.rule.builtin.PagingSyntaxRule;
 import com.sqlcompat.core.rule.builtin.RegexpOperatorRule;
 import com.sqlcompat.core.rule.builtin.ReplaceIntoRule;
+import com.sqlcompat.core.rule.builtin.TinyIntBooleanRule;
 import com.sqlcompat.core.rule.builtin.UpsertRule;
 
 import java.util.List;
@@ -40,7 +45,13 @@ final class BuiltinRules {
                 new InsertIgnoreRule(),
                 new UpsertRule(),
                 new AutoIncrementRule(),
-                new ReplaceIntoRule()
+                new ReplaceIntoRule(),
+                // batch 3 - identifiers / MyBatis / types
+                new BacktickQuoteRule(),
+                new ForeachBindingRule(),
+                new TinyIntBooleanRule(),
+                new OnUpdateTimestampRule(),
+                new IndexPrefixLengthRule()
         );
     }
 }
