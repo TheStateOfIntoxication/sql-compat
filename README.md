@@ -1,4 +1,4 @@
-﻿# sql-compat
+# sql-compat
 
 > 检查 MyBatis Mapper XML / SQL 在 **MySQL → Kingbase(PostgreSQL 系)** 迁移中的方言兼容性问题，输出可直接落地的改写建议。
 
@@ -12,15 +12,28 @@
 
 这个工具把"人工对照"变成"跑一次命令"：解析 Mapper XML 和 SQL，逐条匹配方言规则，输出带**严重级别**和**改写建议**的报告。
 
+工具分两层：
+
+| 层 | 命令 | 解决的问题 | 依赖 |
+|---|---|---|---|
+| **静态检查** | `check` | 语法级方言差异（`IFNULL`、`LIMIT off,size`、`AUTO_INCREMENT`…） | 只要 JDK |
+| **运行时对比** | `verify` | 两边都能跑、但**结果不一样**（整数除法、`\|\|` 语义、NULL 排序） | 两个活库 |
+
+第二层才是贵的：静态规则找的是"报错"，实际线上事故大多来自"不报错但数不对"。
+
 ```bash
-# 扫描一个目录，生成 HTML 报告
+# 静态检查：扫描一个目录，生成 HTML 报告
 java -jar sql-compat.jar check -i ./src/main/resources/mappers -o report.html
+
+# 双库对比：同一套用例在 MySQL 和 PostgreSQL 各跑一遍
+java -jar sql-compat.jar verify -c ./cases -s ./setup.sql -o verify.md
 ```
 
 ```
-scanned 13 statements in 158 ms
-issues: 8  (blocker=8 major=0 minor=0 info=0)
-report written to .../report.html
+scanned 25 statements in 178 ms
+issues: 50  (blocker=19 major=22 minor=9 info=0)
+
+17/20 consistent (85.0%), 3 different, 0 error
 ```
 
 ![demo](docs/demo.gif)
@@ -110,11 +123,36 @@ Mapper XML / .sql
        MarkdownReportRenderer / HtmlReportRenderer
 ```
 
+### 运行时对比（第二层）
+
+```
+cases/*.sql  ──► CaseLoader ──► SqlCase(id, sql, ordered)
+                                        │
+        setup.sql（两边各跑一遍）          │
+                    │                   ▼
+                    │        DualDbComparator
+                    │           ├─ DbProbe(mysql)    ──► 预热 2 次 + 测量 5 次，取中位数
+                    │           └─ DbProbe(postgres) ──┘
+                    │                   │
+                    │                   ▼
+                    │            ValueNormalizer（两侧值归一）
+                    │                   │
+                    └────────► ResultSetDiffer（无序则排序后比，有序则按位比）
+                                        │
+                                        ▼
+                        ComparisonReport（一致率 + 差异明细 + 耗时）
+```
+
+**关键的三个判断**
+
+1. **值归一化是核心**，否则几乎每条用例都会"不一致"：MySQL 的 `TINYINT(1)` 返回 `1`，PostgreSQL 的 `boolean` 返回 `true`；`DECIMAL` 的标度也不同。`ValueNormalizer` 把它们收窄到同一个字符串。
+2. **无序查询先排序再比**。没有 `ORDER BY` 时行序本来就是未定义的，不排序等于把"允许的差异"当成 bug。
+3. **故意不归一的两件事**：整数除法（MySQL `1/2`=0.5，PG=0）和 `||` 语义（MySQL 当作逻辑或）。这些是真实陷阱，必须报出来。
+
 **几条设计取舍**
 - **不用 Spring Boot**：CLI 工具启动不需要容器，冷启动 200ms 比 3s 值钱
 - **解析失败不算错误**：解析不了的语句记 `parseError`，纯文本规则照跑——比整体失败有用
-- **规则用 ServiceLoader 自动发现**：第三方加规则不用改核心代码
-- **报告自包含**：HTML 内嵌 CSS、无外链、无 JS，双击就能看
+- **规则用 ServiceLoader 自动发现**：第三方加规则不用改核心代码- **报告自包含**：HTML 内嵌 CSS、无外链、无 JS，双击就能看
 
 ---
 
@@ -129,6 +167,21 @@ Mapper XML / .sql
       --fail-on BLOCKER
 ```
 有 BLOCKER 时构建失败，报告作为 artifact 上传。
+
+### 双库一致性卡口
+
+```yaml
+- name: consistency gate
+  run: |
+    java -jar sql-compat.jar verify \
+      -c ./cases -s ./setup.sql \
+      -o verify.md --fail-under 95
+```
+一致率低于 95% 时构建失败。库连接串走环境变量（`SQLCOMPAT_MYSQL_URL` / `SQLCOMPAT_PG_URL`），
+**不要写进命令行** —— 进程参数会进 shell 历史和构建日志。
+
+本项目的 CI 就是这么跑的：runner 自带 Docker，用 `services:` 起 `mysql:8.0` + `postgres:16`，
+开发者本机不需要装任何数据库。参考 [.github/workflows/ci.yml](.github/workflows/ci.yml)。
 
 ---
 
@@ -155,13 +208,17 @@ public final class InsertIgnoreRule implements DialectRule {
 - Kingbase 用 **PostgreSQL 16** 做近似验证：Kingbase 基于 PG，方言高度一致，但**不是** 1:1 实测
 - 分页/批量/DML 类规则靠 AST + 正则，MyBatis 动态 SQL 采用"展平"策略，极端嵌套场景可能漏判
 - 规则只覆盖高频场景，不做完整方言矩阵
+- 一致性对比中的耗时是**同机同数据的指示性对比**，不是 benchmark；两个引擎的优化器与默认存储都不同
+- `FLOAT` / `REAL` 按 10 位有效数字比较：避开二进制表示噪声，代价是更小的真实差异看不出来
+- 用例集需自带可移植的建表与造数脚本，暂不支持从生产库采样
 
 **路线图**
-- [x] v0.1 解析器 + 规则引擎 + HTML/Markdown 报告（R001–R003）
-- [ ] v0.2 规则补至 R010
-- [ ] v0.3 GitHub Actions 双库（MySQL 8.0 + PG 16）一致性回归 + 性能对比报告
-- [ ] v0.4 规则补至 R020 + 自动修复（`--fix` 生成改写后的 XML）
-- [ ] v1.0 IDE 插件 / Maven 插件
+- [x] v0.1 解析器 + 规则引擎 + HTML/Markdown 报告
+- [x] v0.2 规则补至 20 条（R001–R020），55 个单测
+- [x] v0.3 双库（MySQL 8.0 + PG 16）一致性回归 + 耗时对比，CI 内置
+- [ ] v0.4 `--fix` 自动生成改写后的 Mapper XML
+- [ ] v0.5 用例生成：从 Mapper XML 反向生成一致性用例，减少手写成本
+- [ ] v1.0 Maven 插件 / IDE 插件
 
 ---
 

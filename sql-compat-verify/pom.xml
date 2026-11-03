@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>io.github.sqlcompat</groupId>
+    <artifactId>sql-compat-parent</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>sql-compat-verify</artifactId>
+  <name>sql-compat :: verify</name>
+  <description>
+    Runs the same portable SQL against two live databases and reports result-set
+    consistency plus per-case latency. This is the second layer of the tool: static rules
+    find syntax problems, this finds the ones that only show up at runtime.
+  </description>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.mysql</groupId>
+      <artifactId>mysql-connector-j</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <!--
+    DualDbComparisonIT needs two live databases and is guarded by @EnabledIfEnvironmentVariable,
+    so it is skipped unless SQLCOMPAT_MYSQL_URL / SQLCOMPAT_PG_URL are present. Surefire forks
+    inherit the parent environment, which is how CI passes the service-container URLs through.
+  -->
+</project>

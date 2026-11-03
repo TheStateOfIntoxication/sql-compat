@@ -20,6 +20,10 @@
       <artifactId>sql-compat-core</artifactId>
     </dependency>
     <dependency>
+      <groupId>io.github.sqlcompat</groupId>
+      <artifactId>sql-compat-verify</artifactId>
+    </dependency>
+    <dependency>
       <groupId>info.picocli</groupId>
       <artifactId>picocli</artifactId>
     </dependency>

@@ -3,14 +3,15 @@ package com.sqlcompat.cli;
 import picocli.CommandLine;
 
 /**
- * Entry point. Delegates to sub-commands; {@code sql-compat check -i <path>} is the main one.
+ * Entry point. Delegates to sub-commands; {@code sql-compat check -i <path>} is the main one,
+ * {@code sql-compat verify} runs the live dual-database comparison.
  */
 @CommandLine.Command(
         name = "sql-compat",
         version = "0.1.0",
         mixinStandardHelpOptions = true,
         description = "Check SQL / MyBatis mappers for MySQL -> Kingbase(PostgreSQL) compatibility issues.",
-        subcommands = {CheckCommand.class})
+        subcommands = {CheckCommand.class, VerifyCommand.class})
 public final class SqlCompatCommand implements Runnable {
 
     @Override
