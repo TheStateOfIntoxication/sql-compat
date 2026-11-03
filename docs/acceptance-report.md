@@ -140,8 +140,11 @@ MySQL 第一行是 `id=13`、PostgreSQL 是 `id=14`（那条 `owner_id` 为 NULL
 
 **但这条用例同时暴露了静态层的一个盲区**：R017 只在语句同时出现 `ORDER BY ... DESC` 和
 `LIMIT` 时才报，而 `07`（ASC、无 `LIMIT`）和 `92`（DESC、无 `LIMIT`）两条**静态层都是 0 问题**。
-用 CLI 实测确认过。已记入 [`known-limitations.md`](known-limitations.md)，是否放宽 R017 待定——
-放宽会显著增加真实项目里的报告噪音。
+用 CLI 实测确认过。已记入 [`known-limitations.md`](known-limitations.md)。
+
+**决策：维持现状，不放宽。** 理由是真实项目里的噪音代价：R011 那条 `foreach` 复核规则在一个真实
+项目上就能刷出 51–68 条，这种规则的使用者第一件事就是 `--ignore`。一条总在喊的规则一周内就会被关掉，
+比漏报更糟。所以 R017 保留 `LIMIT` 门槛，盲区由第二层兜底 —— 这也正是双层设计存在的理由。
 
 ---
 
