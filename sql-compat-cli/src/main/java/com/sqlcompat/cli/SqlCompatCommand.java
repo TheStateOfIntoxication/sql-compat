@@ -22,7 +22,16 @@ public final class SqlCompatCommand implements Runnable {
     }
 
     public static void main(String[] args) {
-        int exitCode = new CommandLine(new SqlCompatCommand()).execute(args);
+        CommandLine commandLine = new CommandLine(new SqlCompatCommand());
+        // 不要让 IO 错误直接吐栈：命令行工具给一句人话，退出码 2。
+        commandLine.setExecutionExceptionHandler((exception, command, parseResult) -> {
+            String message = exception.getMessage() == null
+                    ? exception.getClass().getSimpleName()
+                    : exception.getMessage();
+            System.err.println("错误：" + message);
+            return 2;
+        });
+        int exitCode = commandLine.execute(args);
         System.exit(exitCode);
     }
 }

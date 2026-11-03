@@ -265,3 +265,16 @@ public final class InsertIgnoreRule implements DialectRule {
 ## License
 
 [MIT](LICENSE)
+---
+
+## 方向性（重要）
+
+这个工具描述的是 **MySQL 系源库 → Kingbase/PostgreSQL** 的迁移方向。拿它去扫 **Oracle 源库**的代码，
+会看到"几乎全部通过"—— 那是**正确结果，不是漏检**。
+
+实测佐证：两个 Oracle 源库的真实项目（146 条 / 375 条语句）扫下来 blocker 与 major 都是 0，
+minor 几乎全是 R011（`<foreach>` 复核标记），解析失败也集中在 Oracle 专有语法
+（`INSERT ALL`、`CONNECT BY ROOT`）。完整数字见 [docs/acceptance-report.md](docs/acceptance-report.md)。
+
+**判断能不能用的最快方式**：`grep -r "IFNULL\|DATE_FORMAT\|AUTO_INCREMENT" <你的 mapper 目录>`，
+命中越多，这个工具对你就越有用。
