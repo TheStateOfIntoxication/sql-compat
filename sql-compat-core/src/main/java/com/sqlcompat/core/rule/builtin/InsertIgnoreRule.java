@@ -11,11 +11,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * R005 - MySQL {@code INSERT IGNORE INTO}.
+ * R005 —— MySQL 的 {@code INSERT IGNORE INTO}。
  *
- * <p>Kingbase / PostgreSQL need {@code INSERT ... ON CONFLICT DO NOTHING}. Watch out for the
- * semantic gap: MySQL's INSERT IGNORE also downgrades data errors (truncation, NOT NULL) to
- * warnings, while ON CONFLICT only handles conflicts. Behaviour is not identical.
+ * <p>Kingbase / PostgreSQL 需改写为 {@code INSERT ... ON CONFLICT DO NOTHING}。
+ * 但两者语义并不等价：MySQL 的 INSERT IGNORE 会把数据错误（截断、NOT NULL）降级成告警继续执行，
+ * ON CONFLICT 只处理冲突。改写后原本被静默吞掉的错误会变成失败。
  */
 public final class InsertIgnoreRule implements DialectRule {
 
@@ -29,7 +29,7 @@ public final class InsertIgnoreRule implements DialectRule {
 
     @Override
     public String name() {
-        return "INSERT IGNORE must become ON CONFLICT DO NOTHING";
+        return "INSERT IGNORE 需改为 ON CONFLICT DO NOTHING";
     }
 
     @Override
@@ -39,7 +39,7 @@ public final class InsertIgnoreRule implements DialectRule {
 
     @Override
     public String description() {
-        return "INSERT IGNORE is MySQL-only syntax.";
+        return "INSERT IGNORE 是 MySQL 专有语法。";
     }
 
     @Override
@@ -56,8 +56,7 @@ public final class InsertIgnoreRule implements DialectRule {
                     id(),
                     name(),
                     defaultSeverity(),
-                    "INSERT IGNORE is MySQL-only. Note it also swallows data errors, "
-                            + "which ON CONFLICT does not — review the intent before rewriting.",
+                    "INSERT IGNORE 是 MySQL 专有；它还会吞掉数据错误，而 ON CONFLICT 不会 —— 改写前先确认原意。",
                     "INSERT IGNORE",
                     suggestion(),
                     context.location()));

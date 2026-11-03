@@ -15,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class CaseLoaderTest {
 
     @Test
-    @DisplayName("one file is one case, id comes from the file name, sorted for stable reports")
+    @DisplayName("一个文件一条用例，编号取自文件名，并按名排序保证报告稳定")
     void loadsCasesInStableOrder(@TempDir Path dir) throws IOException {
         Files.writeString(dir.resolve("02_second.sql"), "SELECT 2;");
         Files.writeString(dir.resolve("01_first.sql"), "SELECT 1;");
@@ -28,7 +28,7 @@ class CaseLoaderTest {
     }
 
     @Test
-    @DisplayName("ORDER BY marks the case as order-sensitive")
+    @DisplayName("含 ORDER BY 的用例标记为对行序敏感")
     void detectsOrderedCase(@TempDir Path dir) throws IOException {
         Files.writeString(dir.resolve("a_ordered.sql"), "SELECT id FROM t ORDER BY id;");
         Files.writeString(dir.resolve("b_unordered.sql"), "SELECT id FROM t;");
@@ -40,17 +40,17 @@ class CaseLoaderTest {
     }
 
     @Test
-    @DisplayName("comment-only files are dropped instead of producing empty cases")
+    @DisplayName("纯注释文件被丢弃，不会产生空用例")
     void skipsCommentOnlyFile(@TempDir Path dir) throws IOException {
-        Files.writeString(dir.resolve("empty.sql"), "-- just a note\n-- and another\n");
+        Files.writeString(dir.resolve("empty.sql"), "-- 只有注释\n-- 再来一行\n");
 
         assertThat(new CaseLoader().load(dir)).isEmpty();
     }
 
     @Test
-    @DisplayName("line comments are stripped so the executed SQL stays valid")
+    @DisplayName("行注释被剥掉，执行时的 SQL 保持合法")
     void stripsComments(@TempDir Path dir) throws IOException {
-        Files.writeString(dir.resolve("case.sql"), "-- leading note\nSELECT 1;\n-- trailing note\n");
+        Files.writeString(dir.resolve("case.sql"), "-- 前置说明\nSELECT 1;\n-- 后置说明\n");
 
         assertThat(new CaseLoader().load(dir).getFirst().sql()).isEqualTo("SELECT 1");
     }

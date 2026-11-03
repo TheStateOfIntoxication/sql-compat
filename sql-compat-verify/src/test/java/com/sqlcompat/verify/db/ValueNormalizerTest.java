@@ -9,27 +9,27 @@ import java.sql.Timestamp;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * The normalizer is what makes cross-engine comparison meaningful. Every case here is a real
- * difference between what MySQL and PostgreSQL return for the same logical value.
+ * 归一化器是跨引擎对比成立的前提。这里的每个用例都是 MySQL 与 PostgreSQL
+ * 对同一个逻辑值返回不同表示的客观差异。
  */
 class ValueNormalizerTest {
 
     @Test
-    @DisplayName("null becomes a single literal so both sides compare equal")
+    @DisplayName("null 收敛成同一个字面量，两侧才能比平")
     void normalizesNull() {
         assertThat(ValueNormalizer.normalize(null)).isEqualTo("<null>");
     }
 
     @Test
-    @DisplayName("boolean true and integer 1 collapse to the same value")
+    @DisplayName("布尔 true 与整数 1 收敛成同一个值")
     void normalizesBooleanAgainstTinyInt() {
-        // MySQL TINYINT(1) comes back as Integer 1, PostgreSQL BOOLEAN as true.
+        // MySQL 的 TINYINT(1) 返回 Integer 1，PostgreSQL 的 BOOLEAN 返回 true。
         assertThat(ValueNormalizer.normalize(Boolean.TRUE)).isEqualTo(ValueNormalizer.normalize(1));
         assertThat(ValueNormalizer.normalize(Boolean.FALSE)).isEqualTo(ValueNormalizer.normalize(0));
     }
 
     @Test
-    @DisplayName("decimal scale differences do not count as a difference")
+    @DisplayName("小数标度不同不算差异")
     void normalizesDecimalScale() {
         assertThat(ValueNormalizer.normalize(new BigDecimal("100.50")))
                 .isEqualTo(ValueNormalizer.normalize(new BigDecimal("100.5")));
@@ -38,27 +38,27 @@ class ValueNormalizerTest {
     }
 
     @Test
-    @DisplayName("double artifacts do not leak into the comparison")
+    @DisplayName("浮点二进制误差不会漏进对比结果")
     void normalizesFloatingPoint() {
         assertThat(ValueNormalizer.normalize(0.1 + 0.2)).isEqualTo(ValueNormalizer.normalize(0.3));
     }
 
     @Test
-    @DisplayName("timestamp precision differences do not count as a difference")
+    @DisplayName("时间戳精度差异不算差异")
     void normalizesTimestamp() {
         assertThat(ValueNormalizer.normalize(Timestamp.valueOf("2024-02-01 08:00:00")))
                 .isEqualTo("2024-02-01T08:00");
     }
 
     @Test
-    @DisplayName("byte arrays are compared as base64, not as object identity")
+    @DisplayName("字节数组按 base64 比较，而不是比较对象引用")
     void normalizesByteArray() {
         assertThat(ValueNormalizer.normalize(new byte[]{1, 2, 3}))
                 .isEqualTo(ValueNormalizer.normalize(new byte[]{1, 2, 3}));
     }
 
     @Test
-    @DisplayName("integer and decimal division stay different — that is a real dialect gap")
+    @DisplayName("整数除法与小数除法必须保持不同 —— 那才是真实差异")
     void doesNotHideDivisionSemantics() {
         assertThat(ValueNormalizer.normalize(new BigDecimal("0.5000")))
                 .isNotEqualTo(ValueNormalizer.normalize(0));

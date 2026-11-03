@@ -1,4 +1,4 @@
-# ---- Build output ----
+# ---- 构建产物 ----
 target/
 build/
 out/
@@ -17,12 +17,12 @@ out/
 .classpath
 .factorypath
 
-# ---- OS ----
+# ---- 操作系统 ----
 Thumbs.db
 desktop.ini
 .DS_Store
 
-# ---- Secrets: never commit these ----
+# ---- 凭据：绝对不能提交 ----
 .env
 .env.*
 !.env.example
@@ -33,7 +33,7 @@ application-local.properties
 *.p12
 *.jks
 
-# ---- Local artifacts ----
+# ---- 本地临时产物 ----
 demo-report.html
 demo-report.md
 sql-compat-report.html

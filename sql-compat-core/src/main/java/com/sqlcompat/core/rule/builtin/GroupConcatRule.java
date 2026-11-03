@@ -11,10 +11,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * R008 - MySQL {@code GROUP_CONCAT(col ORDER BY x SEPARATOR ',')}.
+ * R008 —— MySQL 的 {@code GROUP_CONCAT(col ORDER BY x SEPARATOR ',')}。
  *
- * <p>Kingbase / PostgreSQL use {@code STRING_AGG(col, ',')}, and the ordering must move
- * into the aggregate's own {@code ORDER BY} clause.
+ * <p>Kingbase / PostgreSQL 用 {@code STRING_AGG(col, ',')}，且排序列要挪到聚合函数自己的
+ * {@code ORDER BY} 子句里；分隔符从关键字变成第二个位置参数。
  */
 public final class GroupConcatRule implements DialectRule {
 
@@ -27,7 +27,7 @@ public final class GroupConcatRule implements DialectRule {
 
     @Override
     public String name() {
-        return "GROUP_CONCAT must become STRING_AGG";
+        return "GROUP_CONCAT 需改写为 STRING_AGG";
     }
 
     @Override
@@ -37,7 +37,7 @@ public final class GroupConcatRule implements DialectRule {
 
     @Override
     public String description() {
-        return "MySQL GROUP_CONCAT has no equivalent name on Kingbase/PostgreSQL.";
+        return "MySQL 的 GROUP_CONCAT 在 Kingbase/PostgreSQL 上没有同名函数。";
     }
 
     @Override
@@ -53,15 +53,15 @@ public final class GroupConcatRule implements DialectRule {
         while (matcher.find()) {
             int end = Math.min(sql.length(), matcher.end() + 60);
             String snippet = sql.substring(matcher.start(), end).replaceAll("\\s+", " ").trim();
-            // The separator is a keyword in MySQL but a positional argument in PostgreSQL.
+            // SEPARATOR 在 MySQL 里是关键字，在 PostgreSQL 里是第二个位置参数。
             boolean hasSeparator = snippet.toLowerCase().contains("separator");
             issues.add(new Issue(
                     id(),
                     name(),
                     defaultSeverity(),
                     hasSeparator
-                            ? "GROUP_CONCAT is MySQL-only; SEPARATOR ',' becomes the 2nd STRING_AGG argument."
-                            : "GROUP_CONCAT is MySQL-only; STRING_AGG requires an explicit delimiter (default ',').",
+                            ? "GROUP_CONCAT 是 MySQL 专有；SEPARATOR ',' 要变成 STRING_AGG 的第二个参数。"
+                            : "GROUP_CONCAT 是 MySQL 专有；STRING_AGG 必须显式给出分隔符（通常为 ','）。",
                     snippet,
                     suggestion(),
                     context.location()));

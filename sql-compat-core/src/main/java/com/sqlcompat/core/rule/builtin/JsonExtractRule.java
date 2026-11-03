@@ -11,11 +11,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * R013 - MySQL {@code JSON_EXTRACT(col, '$.key')}.
+ * R013 —— MySQL 的 {@code JSON_EXTRACT(col, '$.key')}。
  *
- * <p>Kingbase / PostgreSQL prefer the operators {@code ->} (returns jsonb) and
- * {@code ->>} (returns text). The practical trap is picking the wrong one: {@code ->}
- * keeps quotes, so a join or equality against a plain string silently fails.
+ * <p>Kingbase / PostgreSQL 用运算符 {@code ->}（返回 jsonb）和 {@code ->>}（返回文本）。
+ * 实际踩坑点在于选错：{@code ->} 会保留引号，拿它和普通字符串做等值比较**不会报错但永远不相等**。
  */
 public final class JsonExtractRule implements DialectRule {
 
@@ -28,7 +27,7 @@ public final class JsonExtractRule implements DialectRule {
 
     @Override
     public String name() {
-        return "JSON_EXTRACT must become -> or ->>";
+        return "JSON_EXTRACT 需改写为 -> 或 ->>";
     }
 
     @Override
@@ -38,12 +37,12 @@ public final class JsonExtractRule implements DialectRule {
 
     @Override
     public String description() {
-        return "MySQL JSON_EXTRACT is not available on Kingbase/PostgreSQL.";
+        return "MySQL 的 JSON_EXTRACT 在 Kingbase/PostgreSQL 上不可用。";
     }
 
     @Override
     public String suggestion() {
-        return "JSON_EXTRACT(col, '$.k') -> col ->> 'k'  (use -> only when you need jsonb)";
+        return "JSON_EXTRACT(col, '$.k') -> col ->> 'k'（需要 jsonb 时才用 ->）";
     }
 
     @Override
@@ -58,7 +57,7 @@ public final class JsonExtractRule implements DialectRule {
                     id(),
                     name(),
                     defaultSeverity(),
-                    "JSON_EXTRACT is MySQL-only. Pick ->> for text comparisons, -> for jsonb.",
+                    "JSON_EXTRACT 是 MySQL 专有。做文本比较用 ->>，需要 jsonb 类型用 ->。",
                     snippet,
                     suggestion(),
                     context.location()));

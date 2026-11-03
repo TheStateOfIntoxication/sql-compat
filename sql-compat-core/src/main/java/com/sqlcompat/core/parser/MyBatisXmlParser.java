@@ -23,22 +23,19 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * Extracts statements from MyBatis mapper XML files.
+ * 从 MyBatis Mapper XML 中抽取语句。
  *
- * <p>Dynamic tags ({@code <if>}, {@code <where>}, {@code <foreach>}, ...) are flattened:
- * their text content is kept, the tag itself is dropped. That is enough for most textual
- * dialect checks and avoids needing a full MyBatis dynamic-SQL simulator. The tag names are
- * still recorded on the statement, because a few rules (R011) need to know whether a
- * {@code <foreach>} was involved.
+ * <p>动态标签（{@code <if>}、{@code <where>}、{@code <foreach>} 等）做展平处理：保留其文本内容、
+ * 丢掉标签本身。这足够做绝大多数文本级方言检查，也避免了实现一个完整的 MyBatis 动态 SQL 模拟器。
+ * 标签名仍会记录到语句上，因为个别规则（R011）需要知道语句里有没有 {@code <foreach>}。
  *
- * <p>The parser never touches the network: DTD loading is disabled, so a missing
- * {@code mybatis-3-mapper.dtd} will not fail the scan.
+ * <p>解析过程不访问网络：外部 DTD 加载已关闭，因此缺 {@code mybatis-3-mapper.dtd} 也不会失败。
  */
 public final class MyBatisXmlParser {
 
     private static final Set<String> STATEMENT_TAGS = Set.of("select", "insert", "update", "delete");
 
-    /** Tags worth remembering for rules. Anything else is dropped without a trace. */
+    /** 值得记录的标签，其余标签直接丢弃不留痕迹。 */
     private static final Set<String> TRACKED_TAGS = Set.of(
             "if", "foreach", "choose", "when", "otherwise", "where", "set", "trim", "bind", "include");
 
@@ -78,8 +75,7 @@ public final class MyBatisXmlParser {
     }
 
     /**
-     * Flattens an element into plain SQL text: child tags are dropped, their text kept,
-     * and tracked tag names are collected into {@code dynamicTags}.
+     * 把元素展平成纯 SQL 文本：丢掉子标签、保留其文本，同时把需要跟踪的标签名收进 {@code dynamicTags}。
      */
     private String flatten(Node node, Set<String> dynamicTags) {
         StringBuilder sb = new StringBuilder();
@@ -100,8 +96,8 @@ public final class MyBatisXmlParser {
     }
 
     /**
-     * Best-effort line lookup: finds the line containing {@code id="<id>"}.
-     * DOM does not expose line numbers, and this is accurate enough for reports.
+     * 行号的尽力回溯：找包含 {@code id="<id>"} 的那一行。
+     * DOM 不暴露行号，这个精度对报告来说够用。
      */
     private int findLine(String raw, String id) {
         String[] lines = raw.split("\\R", -1);
@@ -122,12 +118,12 @@ public final class MyBatisXmlParser {
             factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
             factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
             DocumentBuilder builder = factory.newDocumentBuilder();
-            // Swallow DTD fetch errors: mapper files reference a DTD we do not ship.
+            // mapper 引用了一个我们并不分发的 DTD，这里直接吞掉 DTD 拉取。
             builder.setEntityResolver((publicId, systemId) ->
                     new org.xml.sax.InputSource(new java.io.StringReader("")));
             return builder.parse(xmlFile.toFile());
         } catch (ParserConfigurationException | org.xml.sax.SAXException e) {
-            throw new IOException("Failed to parse mapper XML: " + xmlFile, e);
+            throw new IOException("解析 Mapper XML 失败：" + xmlFile, e);
         }
     }
 }

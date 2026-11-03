@@ -1,7 +1,7 @@
 package com.sqlcompat.core.model;
 
 /**
- * Where an issue was found. {@code line} is 1-based, or {@code 0} when unknown.
+ * 问题所在位置。{@code line} 从 1 开始，未知时为 {@code 0}。
  */
 public record SourceLocation(String file, int line) {
 

@@ -14,7 +14,7 @@ class IfnullRuleTest {
     private final IfnullRule rule = new IfnullRule();
 
     @Test
-    @DisplayName("detects IFNULL and reports a BLOCKER")
+    @DisplayName("检出 IFNULL 并报 BLOCKER")
     void detectsIfnull() {
         List<Issue> issues = RuleTestSupport.check(rule,
                 "SELECT IFNULL(a.name, 'x') FROM demo_asset a WHERE a.id = 1");
@@ -26,7 +26,7 @@ class IfnullRuleTest {
     }
 
     @Test
-    @DisplayName("does not report COALESCE")
+    @DisplayName("COALESCE 不应误报")
     void cleanOnCoalesce() {
         List<Issue> issues = RuleTestSupport.check(rule,
                 "SELECT COALESCE(a.name, 'x') FROM demo_asset a");
@@ -35,7 +35,7 @@ class IfnullRuleTest {
     }
 
     @Test
-    @DisplayName("is case insensitive")
+    @DisplayName("大小写不敏感")
     void caseInsensitive() {
         List<Issue> issues = RuleTestSupport.check(rule, "select ifnull(a, b) from t");
 
@@ -43,7 +43,7 @@ class IfnullRuleTest {
     }
 
     @Test
-    @DisplayName("reports every occurrence")
+    @DisplayName("同一语句里出现多次就报多条")
     void reportsAllOccurrences() {
         List<Issue> issues = RuleTestSupport.check(rule,
                 "SELECT IFNULL(a, 0), IFNULL(b, 0) FROM t");

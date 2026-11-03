@@ -1,17 +1,17 @@
 package com.sqlcompat.core.model;
 
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 
 /**
- * One SQL statement extracted from a MyBatis mapper (or a plain .sql file).
+ * 从 Mapper XML（或纯 SQL 文件）中抽取出来的一条语句。
  *
- * @param namespace    mapper namespace, may be blank for plain SQL files
- * @param id           statement id inside the mapper, e.g. {@code selectUserById}
- * @param sqlText      statement body with dynamic tags flattened
- * @param location     source file and line
- * @param dynamicTags  MyBatis dynamic tag names found inside the statement
- *                     (e.g. {@code foreach}, {@code if}), lower-cased
+ * @param namespace   mapper 的 namespace；纯 SQL 文件为空
+ * @param id          mapper 内的语句 id，例如 {@code selectUserById}
+ * @param sqlText     语句正文，动态标签已展平
+ * @param location    来源文件与行号
+ * @param dynamicTags 语句内出现过的 MyBatis 动态标签名（如 {@code foreach}、{@code if}），已转小写
  */
 public record SqlStatement(
         String namespace,
@@ -29,7 +29,7 @@ public record SqlStatement(
         dynamicTags = dynamicTags == null ? Set.of() : Set.copyOf(dynamicTags);
     }
 
-    /** Convenience constructor for plain SQL statements, which have no dynamic tags. */
+    /** 纯 SQL 语句的便捷构造器：不存在动态标签。 */
     public SqlStatement(String namespace, String id, String sqlText, SourceLocation location) {
         this(namespace, id, sqlText, location, Set.of());
     }
@@ -39,6 +39,6 @@ public record SqlStatement(
     }
 
     public boolean hasDynamicTag(String tag) {
-        return dynamicTags.contains(tag.toLowerCase(java.util.Locale.ROOT));
+        return dynamicTags.contains(tag.toLowerCase(Locale.ROOT));
     }
 }

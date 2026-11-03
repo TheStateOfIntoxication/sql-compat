@@ -24,7 +24,7 @@ class CompatEngineTest {
     }
 
     @Test
-    @DisplayName("parses a mapper XML and finds the statements")
+    @DisplayName("能解析 Mapper XML 并取出语句")
     void collectsStatementsFromMapper() throws IOException, URISyntaxException {
         List<SqlStatement> statements = new CompatEngine().collectStatements(fixtures());
 
@@ -35,7 +35,7 @@ class CompatEngineTest {
     }
 
     @Test
-    @DisplayName("finds blocker issues in the fixture mappers")
+    @DisplayName("在 fixture 里能扫出 BLOCKER 级问题")
     void findsIssues() throws IOException, URISyntaxException {
         Report report = new CompatEngine().scan(fixtures(), "MySQL", "Kingbase/PostgreSQL");
 
@@ -46,7 +46,7 @@ class CompatEngineTest {
     }
 
     @Test
-    @DisplayName("portable statement stays clean")
+    @DisplayName("可移植的语句保持干净")
     void portableStatementIsClean() throws IOException, URISyntaxException {
         Report report = new CompatEngine().scan(fixtures(), "MySQL", "Kingbase/PostgreSQL");
 
@@ -57,14 +57,14 @@ class CompatEngineTest {
     }
 
     @Test
-    @DisplayName("both renderers produce non-empty output")
+    @DisplayName("两种渲染器都能产出内容")
     void rendersReports() throws IOException, URISyntaxException {
         Report report = new CompatEngine().scan(fixtures(), "MySQL", "Kingbase/PostgreSQL");
 
         String markdown = new MarkdownReportRenderer().render(report);
         String html = new HtmlReportRenderer().render(report);
 
-        assertThat(markdown).contains("# sql-compat report").contains("R001");
+        assertThat(markdown).contains("# sql-compat 兼容性报告").contains("R001");
         assertThat(html).contains("<!DOCTYPE html>").contains("selectAssetById");
     }
 }

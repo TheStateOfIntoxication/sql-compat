@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Self-contained HTML report: inline CSS, no external assets, no JavaScript.
- * Double-click it and it works — which is what you want when you demo the tool.
+ * 自包含 HTML 报告：样式内联、无外部资源、无 JavaScript。
+ * 双击就能看 —— 演示工具时这一点比"漂亮的前端"重要得多。
  */
 public final class HtmlReportRenderer implements ReportRenderer {
 
@@ -24,10 +24,10 @@ public final class HtmlReportRenderer implements ReportRenderer {
         StringBuilder sb = new StringBuilder();
         sb.append("""
                 <!DOCTYPE html>
-                <html lang="en">
+                <html lang="zh-CN">
                 <head>
                 <meta charset="utf-8">
-                <title>sql-compat report</title>
+                <title>sql-compat 兼容性报告</title>
                 <style>
                 :root{--bg:#0f1115;--fg:#e6e6e6;--muted:#9aa4b2;--line:#252a33;
                       --blocker:#ff5c5c;--major:#ffb020;--minor:#4aa8ff;--info:#8b949e;--card:#161a21}
@@ -39,7 +39,7 @@ public final class HtmlReportRenderer implements ReportRenderer {
                 .cards{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px}
                 .card{background:var(--card);border:1px solid var(--line);border-radius:10px;
                       padding:14px 18px;min-width:132px}
-                .card .k{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+                .card .k{color:var(--muted);font-size:12px}
                 .card .v{font-size:24px;font-weight:600;margin-top:2px}
                 .stmt{background:var(--card);border:1px solid var(--line);border-radius:10px;
                       padding:16px 18px;margin-bottom:14px}
@@ -67,7 +67,7 @@ public final class HtmlReportRenderer implements ReportRenderer {
                 <body>
                 """);
 
-        sb.append("<h1>sql-compat report</h1>\n");
+        sb.append("<h1>sql-compat 兼容性报告</h1>\n");
         sb.append("<div class=\"sub\">").append(escape(report.sourceDialect()))
                 .append(" &rarr; ").append(escape(report.targetDialect()))
                 .append(" &nbsp;·&nbsp; ").append(escape(report.target()))
@@ -75,16 +75,16 @@ public final class HtmlReportRenderer implements ReportRenderer {
 
         Map<Severity, Integer> bySeverity = report.issueCountBySeverity();
         sb.append("<div class=\"cards\">\n");
-        card(sb, "statements", String.valueOf(report.statementCount()), null);
-        card(sb, "issues", String.valueOf(report.issueCount()), null);
+        card(sb, "扫描语句", String.valueOf(report.statementCount()), null);
+        card(sb, "问题总数", String.valueOf(report.issueCount()), null);
         for (Severity severity : Severity.values()) {
-            card(sb, severity.name().toLowerCase(), String.valueOf(bySeverity.get(severity)), severity);
+            card(sb, severity.name(), String.valueOf(bySeverity.get(severity)), severity);
         }
-        card(sb, "parse failures", String.valueOf(report.parseErrorCount()), null);
+        card(sb, "解析失败", String.valueOf(report.parseErrorCount()), null);
         sb.append("</div>\n");
 
         if (report.issueCount() == 0) {
-            sb.append("<p class=\"clean\">No compatibility issues found.</p>\n");
+            sb.append("<p class=\"clean\">未发现兼容性问题。</p>\n");
         }
 
         List<ScanResult> withIssues = report.results().stream().filter(r -> !r.clean()).toList();
@@ -100,10 +100,10 @@ public final class HtmlReportRenderer implements ReportRenderer {
                 sb.append("<strong>").append(escape(issue.ruleName())).append("</strong>\n");
                 sb.append("<div class=\"msg\">").append(escape(issue.message())).append("</div>\n");
                 if (issue.snippet() != null && !issue.snippet().isBlank()) {
-                    sb.append("<div>found: <code>").append(escape(issue.snippet())).append("</code></div>\n");
+                    sb.append("<div>命中：<code>").append(escape(issue.snippet())).append("</code></div>\n");
                 }
                 if (issue.suggestion() != null && !issue.suggestion().isBlank()) {
-                    sb.append("<div class=\"fix\">fix: <code>")
+                    sb.append("<div class=\"fix\">改写：<code>")
                             .append(escape(issue.suggestion())).append("</code></div>\n");
                 }
                 sb.append("</div>\n");

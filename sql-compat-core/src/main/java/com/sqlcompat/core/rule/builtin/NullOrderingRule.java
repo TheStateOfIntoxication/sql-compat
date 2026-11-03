@@ -9,15 +9,13 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 /**
- * R017 - {@code ORDER BY col DESC} combined with {@code LIMIT}: NULL placement differs.
+ * R017 —— {@code ORDER BY col DESC} 叠加 {@code LIMIT} 时 NULL 的位置不同。
  *
- * <p>MySQL sorts NULLs first on ASC and last on DESC. PostgreSQL defaults to the opposite
- * (NULLs are treated as larger than any value, so they come last on ASC and first on DESC).
- * For a plain listing nobody notices; for a paged list it changes <b>which rows land on page 1</b>.
+ * <p>MySQL 认为 NULL 最小（ASC 在前、DESC 在后）；PostgreSQL 认为 NULL 最大
+ * （ASC 在后、DESC 在前）。普通列表没人注意，但分页时它决定**第一页是哪几条**。
  *
- * <p>Scope is deliberately limited to statements that also use {@code LIMIT}. Firing on every
- * {@code ORDER BY ... DESC} would bury the report in noise for a problem that only matters when
- * the result is truncated.
+ * <p>范围刻意限制在同时带 {@code LIMIT} 的语句：对每个 {@code ORDER BY ... DESC} 都报会让报告
+ * 变成噪音，而没被截断的结果里这个差异并不构成实际问题。
  */
 public final class NullOrderingRule implements DialectRule {
 
@@ -31,7 +29,7 @@ public final class NullOrderingRule implements DialectRule {
 
     @Override
     public String name() {
-        return "ORDER BY DESC + LIMIT: NULLs land on a different page";
+        return "ORDER BY DESC + LIMIT：NULL 落在不同页";
     }
 
     @Override
@@ -41,12 +39,12 @@ public final class NullOrderingRule implements DialectRule {
 
     @Override
     public String description() {
-        return "MySQL and PostgreSQL place NULLs differently in DESC order.";
+        return "MySQL 与 PostgreSQL 在 DESC 排序下对 NULL 的处理方向相反。";
     }
 
     @Override
     public String suggestion() {
-        return "make it explicit: ORDER BY col DESC NULLS LAST (or NULLS FIRST)";
+        return "显式写出：ORDER BY col DESC NULLS LAST（或 NULLS FIRST）";
     }
 
     @Override
@@ -63,8 +61,8 @@ public final class NullOrderingRule implements DialectRule {
                 id(),
                 name(),
                 defaultSeverity(),
-                "DESC ordering with LIMIT: MySQL puts NULLs last, PostgreSQL puts them first. "
-                        + "Rows on the first page can differ after migration.",
+                "DESC 排序叠加 LIMIT：MySQL 把 NULL 排在最后，PostgreSQL 排在最前。"
+                        + "迁移后第一页的记录可能换人。",
                 matcher.group().replaceAll("\\s+", " ").trim(),
                 suggestion(),
                 context.location()));

@@ -16,19 +16,19 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Batch 3 (identifiers / MyBatis / types): R009 backticks, R011 foreach,
- * R014 TINYINT(1), R015 ON UPDATE, R018 index prefix.
+ * 批 3（标识符 / MyBatis / 类型）：R009 反引号、R011 foreach、
+ * R014 TINYINT(1)、R015 ON UPDATE、R018 索引前缀。
  */
 class IdentifierAndTypeRulesTest {
 
     @Nested
-    @DisplayName("R009 backtick identifiers")
+    @DisplayName("R009 反引号标识符")
     class Backticks {
 
         private final DialectRule rule = new BacktickQuoteRule();
 
         @Test
-        @DisplayName("detects a backtick-quoted column and shows the double-quoted rewrite")
+        @DisplayName("检出反引号，并给出双引号改写")
         void detects() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "SELECT `asset_name` FROM `demo_asset` WHERE id = 1");
@@ -39,7 +39,7 @@ class IdentifierAndTypeRulesTest {
         }
 
         @Test
-        @DisplayName("stays silent on plain identifiers")
+        @DisplayName("普通标识符不应误报")
         void silentOnPlain() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "SELECT asset_name FROM demo_asset WHERE id = 1");
@@ -49,13 +49,13 @@ class IdentifierAndTypeRulesTest {
     }
 
     @Nested
-    @DisplayName("R011 <foreach> binding")
+    @DisplayName("R011 <foreach> 拼接")
     class Foreach {
 
         private final DialectRule rule = new ForeachBindingRule();
 
         @Test
-        @DisplayName("fires when the statement contains a foreach tag")
+        @DisplayName("语句含 foreach 标签时触发，并提示 65535 参数上限")
         void firesWithForeach() {
             SqlStatement statement = new SqlStatement("demo.mapper", "byOwners",
                     "SELECT a.id FROM demo_asset a WHERE a.owner_id IN ( )",
@@ -68,7 +68,7 @@ class IdentifierAndTypeRulesTest {
         }
 
         @Test
-        @DisplayName("stays silent without a foreach tag")
+        @DisplayName("没有 foreach 标签时不触发")
         void silentWithoutForeach() {
             SqlStatement statement = new SqlStatement("demo.mapper", "byId",
                     "SELECT a.id FROM demo_asset a WHERE a.id = 1",
@@ -86,7 +86,7 @@ class IdentifierAndTypeRulesTest {
         private final DialectRule rule = new TinyIntBooleanRule();
 
         @Test
-        @DisplayName("detects TINYINT(1) and warns against mapping to SMALLINT")
+        @DisplayName("检出 TINYINT(1)，并提示不要映射成 SMALLINT")
         void detects() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "CREATE TABLE demo_asset (id BIGINT, enabled TINYINT(1) DEFAULT 0)");
@@ -97,7 +97,7 @@ class IdentifierAndTypeRulesTest {
         }
 
         @Test
-        @DisplayName("stays silent on TINYINT(4)")
+        @DisplayName("TINYINT(4) 不应误报")
         void silentOnTinyInt4() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "CREATE TABLE demo_asset (id BIGINT, level TINYINT(4))");
@@ -113,7 +113,7 @@ class IdentifierAndTypeRulesTest {
         private final DialectRule rule = new OnUpdateTimestampRule();
 
         @Test
-        @DisplayName("detects ON UPDATE CURRENT_TIMESTAMP")
+        @DisplayName("检出 ON UPDATE CURRENT_TIMESTAMP")
         void detectsCurrentTimestamp() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "CREATE TABLE demo_asset (id BIGINT, updated_at DATETIME "
@@ -121,11 +121,11 @@ class IdentifierAndTypeRulesTest {
 
             assertThat(issues).hasSize(1);
             assertThat(issues.getFirst().ruleId()).isEqualTo("R015");
-            assertThat(issues.getFirst().message()).contains("silently stops updating");
+            assertThat(issues.getFirst().message()).contains("停止更新");
         }
 
         @Test
-        @DisplayName("detects ON UPDATE NOW()")
+        @DisplayName("检出 ON UPDATE NOW()")
         void detectsNow() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "ALTER TABLE demo_asset MODIFY updated_at DATETIME ON UPDATE NOW()");
@@ -134,7 +134,7 @@ class IdentifierAndTypeRulesTest {
         }
 
         @Test
-        @DisplayName("stays silent on a plain default timestamp")
+        @DisplayName("只有默认值、没有 ON UPDATE 时不应误报")
         void silentOnDefaultOnly() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "CREATE TABLE demo_asset (id BIGINT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)");
@@ -144,13 +144,13 @@ class IdentifierAndTypeRulesTest {
     }
 
     @Nested
-    @DisplayName("R018 index prefix length")
+    @DisplayName("R018 索引前缀长度")
     class IndexPrefix {
 
         private final DialectRule rule = new IndexPrefixLengthRule();
 
         @Test
-        @DisplayName("detects a prefix index and suggests left()")
+        @DisplayName("检出前缀索引，并给出 left() 的建索引语句")
         void detects() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "CREATE TABLE demo_asset (id BIGINT, name VARCHAR(200), KEY idx_name (name(10)))");
@@ -161,7 +161,7 @@ class IdentifierAndTypeRulesTest {
         }
 
         @Test
-        @DisplayName("stays silent on a full-column index")
+        @DisplayName("整列索引不应误报")
         void silentOnFullIndex() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "CREATE TABLE demo_asset (id BIGINT, name VARCHAR(200), KEY idx_name (name))");

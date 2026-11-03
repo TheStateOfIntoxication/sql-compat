@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Plain Markdown report: easy to read in a terminal, easy to diff in CI logs.
+ * 纯 Markdown 报告：终端里好读，CI 日志里好 diff。
  */
 public final class MarkdownReportRenderer implements ReportRenderer {
 
@@ -21,26 +21,26 @@ public final class MarkdownReportRenderer implements ReportRenderer {
     @Override
     public String render(Report report) {
         StringBuilder sb = new StringBuilder();
-        sb.append("# sql-compat report\n\n");
-        sb.append("| item | value |\n|---|---|\n");
-        sb.append("| target | `").append(report.target()).append("` |\n");
-        sb.append("| dialects | ").append(report.sourceDialect()).append(" -> ")
+        sb.append("# sql-compat 兼容性报告\n\n");
+        sb.append("| 项 | 值 |\n|---|---|\n");
+        sb.append("| 扫描目标 | `").append(report.target()).append("` |\n");
+        sb.append("| 方言 | ").append(report.sourceDialect()).append(" -> ")
                 .append(report.targetDialect()).append(" |\n");
-        sb.append("| statements scanned | ").append(report.statementCount()).append(" |\n");
-        sb.append("| issues | ").append(report.issueCount()).append(" |\n");
-        sb.append("| parse failures | ").append(report.parseErrorCount()).append(" |\n");
-        sb.append("| elapsed | ").append(report.elapsed().toMillis()).append(" ms |\n\n");
+        sb.append("| 扫描语句数 | ").append(report.statementCount()).append(" |\n");
+        sb.append("| 问题数 | ").append(report.issueCount()).append(" |\n");
+        sb.append("| 解析失败数 | ").append(report.parseErrorCount()).append(" |\n");
+        sb.append("| 耗时 | ").append(report.elapsed().toMillis()).append(" ms |\n\n");
 
-        sb.append("## By severity\n\n");
+        sb.append("## 按级别统计\n\n");
         for (Map.Entry<Severity, Integer> entry : report.issueCountBySeverity().entrySet()) {
-            sb.append("- **").append(entry.getKey()).append("**: ").append(entry.getValue()).append('\n');
+            sb.append("- **").append(entry.getKey()).append("**：").append(entry.getValue()).append('\n');
         }
         sb.append('\n');
 
-        sb.append("## Findings\n\n");
+        sb.append("## 问题明细\n\n");
         List<ScanResult> withIssues = report.results().stream().filter(r -> !r.clean()).toList();
         if (withIssues.isEmpty()) {
-            sb.append("No compatibility issues found.\n");
+            sb.append("未发现兼容性问题。\n");
             return sb.toString();
         }
         for (ScanResult result : withIssues) {
@@ -51,10 +51,10 @@ public final class MarkdownReportRenderer implements ReportRenderer {
                         .append("` ").append(issue.ruleName()).append('\n');
                 sb.append("  - ").append(issue.message()).append('\n');
                 if (issue.snippet() != null && !issue.snippet().isBlank()) {
-                    sb.append("  - found: `").append(issue.snippet()).append("`\n");
+                    sb.append("  - 命中：`").append(issue.snippet()).append("`\n");
                 }
                 if (issue.suggestion() != null && !issue.suggestion().isBlank()) {
-                    sb.append("  - fix: `").append(issue.suggestion()).append("`\n");
+                    sb.append("  - 改写：`").append(issue.suggestion()).append("`\n");
                 }
             }
             sb.append('\n');

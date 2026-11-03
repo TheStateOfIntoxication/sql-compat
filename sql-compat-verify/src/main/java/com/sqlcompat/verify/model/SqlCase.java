@@ -3,11 +3,11 @@ package com.sqlcompat.verify.model;
 import java.util.Objects;
 
 /**
- * One portable SQL case that should produce the same answer on both databases.
+ * 一条应当在两个数据库上得到相同答案的可移植 SQL 用例。
  *
- * @param id      case id, derived from the file name so it is stable and reviewable in a diff
- * @param sql     the statement to execute
- * @param ordered when {@code true} the row order is part of the contract (the case has ORDER BY)
+ * @param id      用例编号，取自文件名，稳定且便于在 diff 中审阅
+ * @param sql     要执行的语句
+ * @param ordered 为 {@code true} 时行序属于契约的一部分（语句含 ORDER BY）
  */
 public record SqlCase(String id, String sql, boolean ordered) {
 

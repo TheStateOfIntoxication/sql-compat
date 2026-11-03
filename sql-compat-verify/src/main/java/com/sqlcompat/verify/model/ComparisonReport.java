@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Result of a full consistency run.
+ * 一次完整一致性对比的结果。
  */
 public record ComparisonReport(
         String mysqlLabel,
@@ -32,8 +32,8 @@ public record ComparisonReport(
     }
 
     /**
-     * Share of cases that produced identical results, as a percentage with one decimal.
-     * Error cases count as inconsistent: a statement that fails on one side is not "consistent".
+     * 结果完全一致的用例占比，百分比保留一位小数。
+     * 出错也计入不一致：一侧执行失败的语句不能算"一致"。
      */
     public double consistencyRate() {
         if (caseCount() == 0) {
@@ -46,7 +46,7 @@ public record ComparisonReport(
         return String.format(Locale.ROOT, "%.1f%%", consistencyRate());
     }
 
-    /** Sum of per-case median times, a rough order-of-magnitude comparison between engines. */
+    /** 各用例中位耗时之和，用于粗略比较两个引擎的量级。 */
     public long mysqlTotalMillis() {
         return outcomes.stream().mapToLong(o -> o.mysql().millis()).sum();
     }

@@ -6,38 +6,37 @@ import com.sqlcompat.core.model.Severity;
 import java.util.List;
 
 /**
- * A pluggable compatibility rule.
+ * 可插拔的兼容性规则。
  *
- * <p>Implementations must be stateless and thread-safe: the engine may reuse a single
- * instance across statements.
+ * <p>实现必须无状态且线程安全：引擎会复用同一个实例处理多条语句。
  *
- * <p>Implement this interface and register the class in
- * {@code META-INF/services/com.sqlcompat.core.rule.DialectRule} to have it discovered
- * automatically (see {@code RuleRegistry#loadFromServiceLoader()}).
+ * <p>实现本接口后，把类登记到
+ * {@code META-INF/services/com.sqlcompat.core.rule.DialectRule}，即可被
+ * {@code RuleRegistry#defaults()} 自动发现。
  */
 public interface DialectRule {
 
-    /** Stable identifier, never reused or renumbered. e.g. {@code R001}. */
+    /** 稳定编号，发布后不再变更、不复用，例如 {@code R001}。 */
     String id();
 
-    /** Short human readable name shown in reports. */
+    /** 规则名称，显示在报告里。 */
     String name();
 
-    /** Default severity; a rule may still emit a different severity per finding. */
+    /** 默认级别；同一条规则也可以针对不同发现给出不同级别。 */
     Severity defaultSeverity();
 
-    /** One line explaining what the rule looks for. Shown in the rules doc. */
+    /** 一句话说明规则在找什么，会同步到规则文档。 */
     String description();
 
-    /** Expected rewrite on the target dialect, shown in reports. */
+    /** 目标方言下的预期改写，显示在报告里。 */
     default String suggestion() {
         return "";
     }
 
     /**
-     * Inspect a single statement and return findings.
+     * 检查一条语句。
      *
-     * @return findings, never {@code null}; return {@link List#of()} when clean
+     * @return 发现的问题，不得返回 {@code null}；没有问题时返回 {@link List#of()}
      */
     List<Issue> check(RuleContext context);
 }

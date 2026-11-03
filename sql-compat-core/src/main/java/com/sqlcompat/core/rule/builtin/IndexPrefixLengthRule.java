@@ -11,12 +11,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * R018 - MySQL prefix-length indexes, e.g. {@code KEY idx_name (name(10))}.
+ * R018 —— MySQL 的索引前缀长度，例如 {@code KEY idx_name (name(10))}。
  *
- * <p>Kingbase / PostgreSQL cannot index a prefix of a column. The usual replacement is an
- * expression index on {@code left(col, 10)} — and that index is only used when the query uses
- * the same expression, so the query needs to change too. This is one of the cases where the
- * DDL change alone is not enough.
+ * <p>Kingbase / PostgreSQL 不能只索引某列的前缀。常见替代是表达式索引 {@code left(col, 10)}，
+ * 而该索引只有在查询用**同一个表达式**时才会命中，所以 SQL 也得一起改。
+ * 这是"只改 DDL 不够"的典型场景。
  */
 public final class IndexPrefixLengthRule implements DialectRule {
 
@@ -31,7 +30,7 @@ public final class IndexPrefixLengthRule implements DialectRule {
 
     @Override
     public String name() {
-        return "Index prefix length is not supported";
+        return "索引前缀长度不支持";
     }
 
     @Override
@@ -41,13 +40,12 @@ public final class IndexPrefixLengthRule implements DialectRule {
 
     @Override
     public String description() {
-        return "MySQL indexes can cover a column prefix; Kingbase/PostgreSQL cannot.";
+        return "MySQL 可以只索引列的前缀；Kingbase/PostgreSQL 不支持。";
     }
 
     @Override
     public String suggestion() {
-        return "KEY idx (col(10)) -> CREATE INDEX idx ON t (left(col, 10))  "
-                + "(and the query must use left(col, 10) too)";
+        return "KEY idx (col(10)) -> CREATE INDEX idx ON t (left(col, 10))（查询也要用同一个表达式）";
     }
 
     @Override
@@ -62,8 +60,7 @@ public final class IndexPrefixLengthRule implements DialectRule {
                     id(),
                     name(),
                     defaultSeverity(),
-                    "Prefix-length index on \"" + column + "\" has no direct equivalent; "
-                            + "an expression index only helps if the queries use the same expression.",
+                    "列 \"" + column + "\" 上的前缀索引没有直接等价写法；表达式索引只有在查询使用同一表达式时才生效。",
                     matcher.group().replaceAll("\\s+", " ").trim(),
                     "CREATE INDEX " + indexName + " ON <table> (left(" + column + ", " + length + "))",
                     context.location()));

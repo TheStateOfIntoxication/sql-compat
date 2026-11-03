@@ -3,6 +3,7 @@ package com.sqlcompat.core.engine;
 import com.sqlcompat.core.model.Issue;
 import com.sqlcompat.core.model.Report;
 import com.sqlcompat.core.model.ScanResult;
+import com.sqlcompat.core.model.SourceLocation;
 import com.sqlcompat.core.model.SqlStatement;
 import com.sqlcompat.core.parser.MyBatisXmlParser;
 import com.sqlcompat.core.parser.SqlParserFacade;
@@ -22,10 +23,9 @@ import java.util.List;
 import java.util.stream.Stream;
 
 /**
- * Scans a file or a directory tree and produces a {@link Report}.
+ * 扫描一个文件或一棵目录树，产出 {@link Report}。
  *
- * <p>Supported input: {@code *.xml} MyBatis mappers and {@code *.sql} files containing
- * statements separated by {@code ;}.
+ * <p>支持的输入：{@code *.xml}（MyBatis Mapper）、{@code *.sql}（以 {@code ;} 分隔多条语句）。
  */
 public final class CompatEngine {
 
@@ -58,20 +58,21 @@ public final class CompatEngine {
         return new Report(input.toString(), sourceDialect, targetDialect, results, elapsed);
     }
 
-    /** Collects statements from a mapper XML file, a {@code .sql} file, or a directory. */
+    /** 从 Mapper XML、{@code .sql} 文件或目录中采集语句。 */
     public List<SqlStatement> collectStatements(Path input) throws IOException {
         List<Path> files = new ArrayList<>();
         if (Files.isDirectory(input)) {
             try (Stream<Path> walk = Files.walk(input)) {
                 walk.filter(Files::isRegularFile)
                         .filter(p -> isMapperXml(p) || isSqlFile(p))
+                        // 排序是为了一次扫描的产出稳定，CI 里才能 diff 报告。
                         .sorted(Comparator.comparing(Path::toString))
                         .forEach(files::add);
             }
         } else if (Files.isRegularFile(input)) {
             files.add(input);
         } else {
-            throw new IOException("Input not found: " + input);
+            throw new IOException("输入路径不存在：" + input);
         }
 
         List<SqlStatement> statements = new ArrayList<>();
@@ -98,17 +99,17 @@ public final class CompatEngine {
                     "",
                     file.getFileName() + "#" + (i + 1),
                     sql,
-                    com.sqlcompat.core.model.SourceLocation.of(file.getFileName().toString(), i + 1)));
+                    SourceLocation.of(file.getFileName().toString(), i + 1)));
         }
         return result;
     }
 
     /**
-     * Drops {@code --} line comments from a statement chunk.
+     * 剥掉语句块里的 {@code --} 行注释。
      *
-     * <p>Earlier versions skipped a chunk outright when it started with a comment, which silently
-     * dropped any statement that had a comment above it — the DDL fixtures made that obvious.
-     * Known limitation: a line whose literal value starts with {@code --} is dropped as well.
+     * <p>早期版本遇到以注释开头的语句块就整块跳过，导致"上面有注释的语句"全部被静默丢弃
+     * ——DDL fixture 把这个问题暴露了出来。
+     * 已知局限：字面量本身以 {@code --} 开头的行也会被当成注释。
      */
     private String stripLineComments(String chunk) {
         StringBuilder sb = new StringBuilder(chunk.length());

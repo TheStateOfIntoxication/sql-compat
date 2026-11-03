@@ -12,33 +12,31 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Batch 4 (semantics): R010 LIMIT without ORDER BY, R016 null-safe equals,
- * R017 NULL ordering, R020 date functions.
+ * 批 4（语义 / 边界）：R010 分页无排序、R016 NULL 安全等于、R017 NULL 排序、R020 日期函数。
  *
- * <p>These four are the "no error, wrong answer" group — the most expensive kind of migration
- * bug, because nobody notices until a user complains about a number.
+ * <p>这四条属于"不报错但结果不对"那一类，是迁移里代价最高的问题：没人发现，直到业务方说数字不对。
  */
 class SemanticRulesTest {
 
     @Nested
-    @DisplayName("R010 LIMIT without ORDER BY")
+    @DisplayName("R010 LIMIT 无 ORDER BY")
     class LimitWithoutOrder {
 
         private final DialectRule rule = new LimitWithoutOrderByRule();
 
         @Test
-        @DisplayName("fires when a LIMIT statement has no ORDER BY")
+        @DisplayName("有 LIMIT 没有 ORDER BY 时触发")
         void firesWithoutOrderBy() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "SELECT a.id, a.name FROM demo_asset a LIMIT 20");
 
             assertThat(issues).hasSize(1);
             assertThat(issues.getFirst().ruleId()).isEqualTo("R010");
-            assertThat(issues.getFirst().message()).contains("undefined");
+            assertThat(issues.getFirst().message()).contains("未定义");
         }
 
         @Test
-        @DisplayName("stays silent when ORDER BY is present")
+        @DisplayName("有 ORDER BY 时不触发")
         void silentWithOrderBy() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "SELECT a.id FROM demo_asset a ORDER BY a.id LIMIT 20");
@@ -47,7 +45,7 @@ class SemanticRulesTest {
         }
 
         @Test
-        @DisplayName("stays silent when there is no LIMIT at all")
+        @DisplayName("没有 LIMIT 时不触发")
         void silentWithoutLimit() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "SELECT a.id FROM demo_asset a");
@@ -57,13 +55,13 @@ class SemanticRulesTest {
     }
 
     @Nested
-    @DisplayName("R016 <=> null-safe equals")
+    @DisplayName("R016 <=> NULL 安全等于")
     class NullSafeEquals {
 
         private final DialectRule rule = new NullSafeEqualsRule();
 
         @Test
-        @DisplayName("detects <=> and suggests IS NOT DISTINCT FROM")
+        @DisplayName("检出 <=>，建议改为 IS NOT DISTINCT FROM")
         void detects() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "SELECT a.id FROM demo_asset a WHERE a.owner_id <=> #{ownerId}");
@@ -74,7 +72,7 @@ class SemanticRulesTest {
         }
 
         @Test
-        @DisplayName("stays silent on plain equality")
+        @DisplayName("普通等号不应误报")
         void silentOnEquals() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "SELECT a.id FROM demo_asset a WHERE a.owner_id = #{ownerId}");
@@ -90,7 +88,7 @@ class SemanticRulesTest {
         private final DialectRule rule = new NullOrderingRule();
 
         @Test
-        @DisplayName("fires on DESC with LIMIT and suggests NULLS LAST")
+        @DisplayName("DESC + LIMIT 时触发，建议显式 NULLS LAST")
         void firesOnDescWithLimit() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "SELECT a.id FROM demo_asset a ORDER BY a.created_at DESC LIMIT 20");
@@ -101,7 +99,7 @@ class SemanticRulesTest {
         }
 
         @Test
-        @DisplayName("stays silent without LIMIT")
+        @DisplayName("没有 LIMIT 时不触发")
         void silentWithoutLimit() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "SELECT a.id FROM demo_asset a ORDER BY a.created_at DESC");
@@ -110,7 +108,7 @@ class SemanticRulesTest {
         }
 
         @Test
-        @DisplayName("stays silent on ASC ordering")
+        @DisplayName("ASC 排序不触发")
         void silentOnAsc() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "SELECT a.id FROM demo_asset a ORDER BY a.created_at ASC LIMIT 20");
@@ -120,13 +118,13 @@ class SemanticRulesTest {
     }
 
     @Nested
-    @DisplayName("R020 date functions")
+    @DisplayName("R020 日期函数")
     class DateFunctions {
 
         private final DialectRule rule = new DateFunctionRule();
 
         @Test
-        @DisplayName("detects DATE_ADD and gives an interval rewrite")
+        @DisplayName("检出 DATE_ADD，给出 INTERVAL 改写")
         void detectsDateAdd() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "SELECT DATE_ADD(a.expired_at, INTERVAL 30 DAY) FROM demo_asset a");
@@ -137,17 +135,18 @@ class SemanticRulesTest {
         }
 
         @Test
-        @DisplayName("detects STR_TO_DATE and gives a TO_DATE rewrite")
+        @DisplayName("检出 STR_TO_DATE，给出 TO_DATE 改写")
         void detectsStrToDate() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "SELECT STR_TO_DATE(a.day, '%Y-%m-%d') FROM demo_asset a");
 
             assertThat(issues).hasSize(1);
-            assertThat(issues.getFirst().suggestion()).isEqualTo("STR_TO_DATE(s, '%Y-%m-%d') -> TO_DATE(s, 'YYYY-MM-DD')");
+            assertThat(issues.getFirst().suggestion())
+                    .isEqualTo("STR_TO_DATE(s, '%Y-%m-%d') -> TO_DATE(s, 'YYYY-MM-DD')");
         }
 
         @Test
-        @DisplayName("stays silent on the portable interval form")
+        @DisplayName("可移植的 INTERVAL 写法不应误报")
         void silentOnInterval() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "SELECT a.expired_at + INTERVAL '30 day' FROM demo_asset a");

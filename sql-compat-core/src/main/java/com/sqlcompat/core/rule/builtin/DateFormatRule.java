@@ -11,7 +11,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * R002 - MySQL {@code DATE_FORMAT(col, '%Y-%m-%d')} must be rewritten with {@code TO_CHAR}.
+ * R002 —— MySQL 的 {@code DATE_FORMAT(col, '%Y-%m-%d')}，需要改写为 {@code TO_CHAR}。
+ *
+ * <p>注意函数名要换，格式串也要换（{@code %Y} → {@code YYYY}、{@code %i} → {@code MI}），
+ * 这是迁移里最容易漏的一步。
  */
 public final class DateFormatRule implements DialectRule {
 
@@ -24,7 +27,7 @@ public final class DateFormatRule implements DialectRule {
 
     @Override
     public String name() {
-        return "DATE_FORMAT must become TO_CHAR";
+        return "DATE_FORMAT 需改写为 TO_CHAR";
     }
 
     @Override
@@ -34,7 +37,7 @@ public final class DateFormatRule implements DialectRule {
 
     @Override
     public String description() {
-        return "MySQL DATE_FORMAT(col, fmt) does not exist on Kingbase/PostgreSQL.";
+        return "MySQL 的 DATE_FORMAT(col, fmt) 在 Kingbase/PostgreSQL 上不存在。";
     }
 
     @Override
@@ -53,7 +56,7 @@ public final class DateFormatRule implements DialectRule {
                     id(),
                     name(),
                     defaultSeverity(),
-                    "DATE_FORMAT is MySQL-only; the format string also needs a syntax rewrite.",
+                    "DATE_FORMAT 是 MySQL 专有函数，且格式串语法也需一并改写。",
                     sql.substring(matcher.start(), end).replaceAll("\\s+", " ").trim(),
                     suggestion(),
                     context.location()));

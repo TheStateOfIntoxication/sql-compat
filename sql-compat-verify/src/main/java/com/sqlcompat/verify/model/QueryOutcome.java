@@ -3,11 +3,11 @@ package com.sqlcompat.verify.model;
 import java.util.List;
 
 /**
- * What one database returned for one case, plus how long it took.
+ * 单个数据库对单条用例的返回结果与耗时。
  *
- * @param rows  normalized rows; every cell is already a canonical string
- * @param millis median wall time of the measured iterations, in milliseconds
- * @param error  failure message, or {@code null} when the statement succeeded
+ * @param rows   归一化后的行；每个单元格都已是规范字符串
+ * @param millis 测量轮次的中位耗时，单位毫秒
+ * @param error  失败原因；执行成功为 {@code null}
  */
 public record QueryOutcome(List<List<String>> rows, long millis, String error) {
 

@@ -4,16 +4,15 @@ import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.statement.Statement;
 
 /**
- * Thin wrapper around JSQLParser that never throws.
+ * 对 JSQLParser 的薄封装，保证**永不抛异常**。
  *
- * <p>A statement the parser cannot understand is not an error: it is recorded as
- * {@code parseError} on the result and the textual rules still run.
+ * <p>解析不了的语句不算错误：记到结果的 {@code parseError} 上，纯文本规则照常跑。
  */
 public final class SqlParserFacade {
 
     /**
-     * @param ast   parsed statement, or {@code null}
-     * @param error error message, or {@code null} on success
+     * @param ast   解析出的语句，失败为 {@code null}
+     * @param error 失败原因，成功为 {@code null}
      */
     public record ParseOutcome(Statement ast, String error) {
         public boolean ok() {
@@ -23,7 +22,7 @@ public final class SqlParserFacade {
 
     public ParseOutcome parse(String sql) {
         if (sql == null || sql.isBlank()) {
-            return new ParseOutcome(null, "empty statement");
+            return new ParseOutcome(null, "空语句");
         }
         try {
             return new ParseOutcome(CCJSqlParserUtil.parse(sanitize(sql)), null);
@@ -34,8 +33,8 @@ public final class SqlParserFacade {
     }
 
     /**
-     * Replaces MyBatis {@code #{...}} / {@code ${...}} placeholders with literals the
-     * parser accepts, keeping the SQL shape intact.
+     * 把 MyBatis 的 {@code #{...}} / {@code ${...}} 占位符替换成解析器能接受的字面量，
+     * 保持 SQL 结构不变。
      */
     private String sanitize(String sql) {
         return sql.replaceAll("#\\{[^}]*}", "?")

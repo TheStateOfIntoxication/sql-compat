@@ -6,22 +6,21 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.temporal.TemporalAccessor;
 import java.util.Base64;
+import java.util.Locale;
 
 /**
- * Turns JDBC values into a canonical string so two engines can be compared.
+ * 把 JDBC 值收敛成规范字符串，好让两个引擎的结果可比。
  *
- * <p>This class is the heart of the comparison, and it is opinionated on purpose. Without it
- * almost every case "differs" for reasons that are not real differences:
+ * <p>这个类是对比的核心，而且刻意做了取舍。没有它，几乎每条用例都会"不一致"，
+ * 但原因并不是真的差异：
  *
  * <ul>
- *   <li>MySQL returns {@code 1} for a boolean column, PostgreSQL returns {@code true}</li>
- *   <li>MySQL {@code DECIMAL} comes back as {@code 0.5000}, PostgreSQL {@code numeric} as {@code 0.5000}
- *       but with a different scale after arithmetic</li>
- *   <li>timestamps carry different precision and different {@code toString()} formats</li>
+ *   <li>布尔列 MySQL 返回 {@code 1}，PostgreSQL 返回 {@code true}</li>
+ *   <li>{@code DECIMAL} / {@code numeric} 运算后标度不同，但数值相等</li>
+ *   <li>时间戳精度与 {@code toString()} 格式不一致</li>
  * </ul>
  *
- * <p>What it deliberately does <b>not</b> normalize: integer vs decimal division, and string
- * concatenation operators. Those are genuine dialect differences and should be reported.
+ * <p>**故意不归一**的两件事：整数除法与字符串拼接运算符。那是真实方言差异，应该被报出来。
  */
 public final class ValueNormalizer {
 
@@ -35,7 +34,7 @@ public final class ValueNormalizer {
             return NULL_LITERAL;
         }
         if (value instanceof Boolean bool) {
-            // MySQL TINYINT(1) arrives as Integer(1); PostgreSQL as Boolean(true).
+            // MySQL TINYINT(1) 返回 Integer(1)，PostgreSQL 返回 Boolean(true)。
             return bool ? "1" : "0";
         }
         if (value instanceof BigDecimal decimal) {
@@ -43,11 +42,10 @@ public final class ValueNormalizer {
             return stripped.scale() < 0 ? stripped.setScale(0).toPlainString() : stripped.toPlainString();
         }
         if (value instanceof Double || value instanceof Float) {
-            // Drivers return Double only for FLOAT/REAL columns, where binary representation makes
-            // 0.1 + 0.2 differ from 0.3. Compare to 10 significant digits so noise does not show
-            // up as a false difference. Trade-off: a real difference beyond the 10th significant
-            // digit would be missed — acceptable for migration checks.
-            return String.format(java.util.Locale.ROOT, "%.10g", ((Number) value).doubleValue());
+            // 驱动只用 Double 表示 FLOAT/REAL 列，而二进制表示会让 0.1 + 0.2 不等于 0.3。
+            // 按 10 位有效数字比较，避免这种噪声被误报为差异。
+            // 代价：第 10 位有效数字之后的小差异看不出来 —— 迁移检查可以接受。
+            return String.format(Locale.ROOT, "%.10g", ((Number) value).doubleValue());
         }
         if (value instanceof Number number) {
             return number.toString();

@@ -2,7 +2,10 @@
 
 > 检查 MyBatis Mapper XML / SQL 在 **MySQL → Kingbase(PostgreSQL 系)** 迁移中的方言兼容性问题，输出可直接落地的改写建议。
 
-![ci](https://github.com/TheStateOfIntoxication/sql-compat/actions/workflows/ci.yml/badge.svg)
+[![ci](https://github.com/TheStateOfIntoxication/sql-compat/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/TheStateOfIntoxication/sql-compat/actions/workflows/ci.yml)
+[![license](https://img.shields.io/badge/license-MIT-3da639.svg)](LICENSE)
+[![jdk](https://img.shields.io/badge/JDK-25-437291.svg)](https://adoptium.net/)
+[![rules](https://img.shields.io/badge/规则-20%20条-1f6feb.svg)](docs/rules.md)
 
 ---
 
@@ -36,7 +39,7 @@ issues: 50  (blocker=19 major=22 minor=9 info=0)
 17/20 consistent (85.0%), 3 different, 0 error
 ```
 
-![demo](docs/demo.gif)
+![demo](docs/demo.svg)
 
 ---
 

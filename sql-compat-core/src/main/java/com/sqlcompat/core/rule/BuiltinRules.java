@@ -24,11 +24,11 @@ import com.sqlcompat.core.rule.builtin.UpsertRule;
 import java.util.List;
 
 /**
- * Built-in rule catalogue.
+ * 内置规则清单。
  *
- * <p>Using an explicit list (instead of ServiceLoader) for built-ins keeps the first run
- * deterministic and avoids classpath surprises in IDE sandboxes. Register new built-in
- * rules here; {@link RuleRegistry} sorts them by id, so insertion order does not matter.
+ * <p>内置规则用显式列表而不是 ServiceLoader，是为了保证首次运行结果确定，也避免 IDE 沙箱里
+ * 类路径不一致带来的意外。新增内置规则在此登记即可；{@link RuleRegistry} 会按编号排序，
+ * 登记顺序不影响报告顺序。
  */
 final class BuiltinRules {
 
@@ -37,26 +37,26 @@ final class BuiltinRules {
 
     static List<DialectRule> all() {
         return List.of(
-                // batch 1 - functions
+                // 批 1 · 函数类
                 new IfnullRule(),
                 new DateFormatRule(),
                 new GroupConcatRule(),
                 new RegexpOperatorRule(),
                 new JsonExtractRule(),
-                // batch 2 - DML / DDL syntax
+                // 批 2 · DML / DDL 语法
                 new DeleteUpdateLimitRule(),
                 new PagingSyntaxRule(),
                 new InsertIgnoreRule(),
                 new UpsertRule(),
                 new AutoIncrementRule(),
                 new ReplaceIntoRule(),
-                // batch 3 - identifiers / MyBatis / types
+                // 批 3 · 标识符 / MyBatis / 类型
                 new BacktickQuoteRule(),
                 new ForeachBindingRule(),
                 new TinyIntBooleanRule(),
                 new OnUpdateTimestampRule(),
                 new IndexPrefixLengthRule(),
-                // batch 4 - semantics
+                // 批 4 · 语义 / 边界
                 new LimitWithoutOrderByRule(),
                 new NullSafeEqualsRule(),
                 new NullOrderingRule(),

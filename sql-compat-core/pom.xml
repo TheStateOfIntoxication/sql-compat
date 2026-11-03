@@ -44,8 +44,7 @@
               <goal>prepare-agent</goal>
             </goals>
             <configuration>
-              <!-- Third-party bytecode (jsqlparser is generated JavaCC) is not ours to cover,
-                   and its generated token manager trips the instrumenter. -->
+              <!-- 第三方字节码（jsqlparser 是 JavaCC 生成的）不在本次覆盖率口径内，且其生成的 token manager 会让插桩器报错。 -->
               <excludes>
                 <exclude>net/sf/jsqlparser/**</exclude>
                 <exclude>picocli/**</exclude>

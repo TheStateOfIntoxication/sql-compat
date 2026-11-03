@@ -11,12 +11,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * R019 - MySQL {@code REPLACE INTO t ...}.
+ * R019 —— MySQL 的 {@code REPLACE INTO t ...}。
  *
- * <p>Kingbase / PostgreSQL have no REPLACE INTO. It is not a simple synonym for upsert either:
- * MySQL REPLACE deletes the conflicting row and inserts a new one, so triggers fire twice and
- * the surrogate key changes. Rewriting to ON CONFLICT changes that behaviour on purpose — which
- * is usually what you want, but it must be a decision, not an accident.
+ * <p>Kingbase / PostgreSQL 没有 REPLACE INTO，但它也不是 upsert 的同义词：MySQL 的 REPLACE
+ * 是**先删后插**，触发器会触发两次、自增主键会变。改写成 ON CONFLICT 是行为变更
+ * —— 通常是想要的结果，但必须是个决定，而不是顺手替换。
  */
 public final class ReplaceIntoRule implements DialectRule {
 
@@ -30,7 +29,7 @@ public final class ReplaceIntoRule implements DialectRule {
 
     @Override
     public String name() {
-        return "REPLACE INTO must become ON CONFLICT (or MERGE)";
+        return "REPLACE INTO 需改为 ON CONFLICT（或 MERGE）";
     }
 
     @Override
@@ -40,13 +39,12 @@ public final class ReplaceIntoRule implements DialectRule {
 
     @Override
     public String description() {
-        return "REPLACE INTO is MySQL-only and behaves as delete-then-insert.";
+        return "REPLACE INTO 是 MySQL 专有，且语义为删后插。";
     }
 
     @Override
     public String suggestion() {
-        return "REPLACE INTO t (..) VALUES (..) -> INSERT INTO t (..) VALUES (..) "
-                + "ON CONFLICT (key) DO UPDATE SET ...";
+        return "REPLACE INTO t (..) VALUES (..) -> INSERT INTO t (..) VALUES (..) ON CONFLICT (key) DO UPDATE SET ...";
     }
 
     @Override
@@ -58,8 +56,8 @@ public final class ReplaceIntoRule implements DialectRule {
                     id(),
                     name(),
                     defaultSeverity(),
-                    "REPLACE INTO does not exist on Kingbase/PostgreSQL, and its delete-then-insert "
-                            + "semantics differ from ON CONFLICT (triggers, surrogate keys).",
+                    "Kingbase/PostgreSQL 没有 REPLACE INTO，且它的先删后插语义与 ON CONFLICT 不同"
+                            + "（触发器次数、自增主键都会变）。",
                     "REPLACE INTO",
                     suggestion(),
                     context.location()));

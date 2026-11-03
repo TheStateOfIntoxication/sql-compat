@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.ServiceLoader;
 
 /**
- * Holds the active rule set.
+ * 当前生效的规则集合。
  *
- * <p>Rules are sorted by id so reports are stable across runs and machines.
+ * <p>规则按编号排序，保证同一份输入在不同机器、不同运行次数下产出同一份报告。
  */
 public final class RuleRegistry {
 
@@ -19,8 +19,8 @@ public final class RuleRegistry {
     }
 
     /**
-     * Built-in rules plus everything registered through
-     * {@code META-INF/services/com.sqlcompat.core.rule.DialectRule}.
+     * 内置规则，加上通过 {@code META-INF/services/com.sqlcompat.core.rule.DialectRule}
+     * 注册进来的外部规则。
      */
     public static RuleRegistry defaults() {
         RuleRegistry registry = new RuleRegistry();
@@ -32,7 +32,7 @@ public final class RuleRegistry {
     public RuleRegistry register(DialectRule rule) {
         boolean duplicate = rules.stream().anyMatch(r -> r.id().equals(rule.id()));
         if (duplicate) {
-            throw new IllegalArgumentException("Duplicate rule id: " + rule.id());
+            throw new IllegalArgumentException("规则编号重复：" + rule.id());
         }
         rules.add(rule);
         rules.sort(Comparator.comparing(DialectRule::id));

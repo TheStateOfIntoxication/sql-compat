@@ -11,12 +11,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * R015 - MySQL {@code DATETIME ... ON UPDATE CURRENT_TIMESTAMP}.
+ * R015 —— MySQL 的 {@code DATETIME ... ON UPDATE CURRENT_TIMESTAMP}。
  *
- * <p>Kingbase / PostgreSQL have no column-level "on update" clause. The behaviour must move to
- * a trigger or to the application layer, and doing it in the application is usually the better
- * answer for a MyBatis code base — but it has to be a decision, because after migration the
- * column simply stops updating and nobody notices for months.
+ * <p>Kingbase / PostgreSQL 没有列级的 on update 子句，行为要挪到触发器或应用层。
+ * 对 MyBatis 代码库来说放应用层通常更合适，但这必须是个决定 —— 迁移后这一列会**默默停止更新**，
+ * 而语句本身照常成功，几个月后才有人发现。
  */
 public final class OnUpdateTimestampRule implements DialectRule {
 
@@ -31,7 +30,7 @@ public final class OnUpdateTimestampRule implements DialectRule {
 
     @Override
     public String name() {
-        return "ON UPDATE CURRENT_TIMESTAMP has no column-level equivalent";
+        return "ON UPDATE CURRENT_TIMESTAMP 没有列级等价写法";
     }
 
     @Override
@@ -41,13 +40,12 @@ public final class OnUpdateTimestampRule implements DialectRule {
 
     @Override
     public String description() {
-        return "Column-level ON UPDATE CURRENT_TIMESTAMP is MySQL-only; use a trigger or app code.";
+        return "列级 ON UPDATE CURRENT_TIMESTAMP 是 MySQL 专有，需改触发器或应用层维护。";
     }
 
     @Override
     public String suggestion() {
-        return "drop ON UPDATE CURRENT_TIMESTAMP; set updated_at in the application "
-                + "or create a BEFORE UPDATE trigger";
+        return "去掉 ON UPDATE CURRENT_TIMESTAMP，在应用层写 updated_at，或建 BEFORE UPDATE 触发器";
     }
 
     @Override
@@ -59,8 +57,7 @@ public final class OnUpdateTimestampRule implements DialectRule {
                     id(),
                     name(),
                     defaultSeverity(),
-                    "After migration this column silently stops updating — the statement keeps "
-                            + "succeeding, which is why it is easy to miss.",
+                    "迁移后这一列会默默停止更新 —— 语句照常成功，所以特别容易漏。",
                     matcher.group(),
                     suggestion(),
                     context.location()));

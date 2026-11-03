@@ -12,11 +12,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * R006 - MySQL {@code ON DUPLICATE KEY UPDATE}.
+ * R006 —— MySQL 的 {@code ON DUPLICATE KEY UPDATE}。
  *
- * <p>Kingbase / PostgreSQL want {@code ON CONFLICT (cols) DO UPDATE SET ...}, and the conflict
- * target columns are <b>mandatory</b>. Also {@code VALUES(col)} inside the update clause has no
- * meaning there — it must become {@code EXCLUDED.col}.
+ * <p>Kingbase / PostgreSQL 需写成 {@code ON CONFLICT (cols) DO UPDATE SET ...}，其中
+ * <b>冲突目标列是强制的</b>；同时 {@code VALUES(col)} 在那边没有意义，要换成 {@code EXCLUDED.col}。
  */
 public final class UpsertRule implements DialectRule {
 
@@ -32,7 +31,7 @@ public final class UpsertRule implements DialectRule {
 
     @Override
     public String name() {
-        return "ON DUPLICATE KEY UPDATE must become ON CONFLICT ... DO UPDATE";
+        return "ON DUPLICATE KEY UPDATE 需改为 ON CONFLICT ... DO UPDATE";
     }
 
     @Override
@@ -42,7 +41,7 @@ public final class UpsertRule implements DialectRule {
 
     @Override
     public String description() {
-        return "MySQL upsert syntax has no counterpart on Kingbase/PostgreSQL.";
+        return "MySQL 的 upsert 语法在 Kingbase/PostgreSQL 上没有对应写法。";
     }
 
     @Override
@@ -62,11 +61,10 @@ public final class UpsertRule implements DialectRule {
                 valuesRefs.add(refMatcher.group(1));
             }
             String message = valuesRefs.isEmpty()
-                    ? "ON DUPLICATE KEY UPDATE is MySQL-only; the conflict target columns are mandatory "
-                      + "in ON CONFLICT and cannot be inferred."
-                    : "ON DUPLICATE KEY UPDATE is MySQL-only; VALUES(" + String.join(", ", valuesRefs)
-                      + ") must become EXCLUDED." + valuesRefs.getFirst().toLowerCase(Locale.ROOT)
-                      + ", and the conflict target columns must be written explicitly.";
+                    ? "ON DUPLICATE KEY UPDATE 是 MySQL 专有；ON CONFLICT 的冲突目标列是强制的，无法自动推断。"
+                    : "ON DUPLICATE KEY UPDATE 是 MySQL 专有；VALUES(" + String.join(", ", valuesRefs)
+                      + ") 要改成 EXCLUDED." + valuesRefs.getFirst().toLowerCase(Locale.ROOT)
+                      + "，并且必须显式写出冲突目标列。";
             issues.add(new Issue(
                     id(),
                     name(),

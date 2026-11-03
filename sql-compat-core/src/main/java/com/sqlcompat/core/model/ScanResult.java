@@ -3,11 +3,11 @@ package com.sqlcompat.core.model;
 import java.util.List;
 
 /**
- * Result of scanning one statement.
+ * 单条语句的扫描结果。
  *
- * @param statement  the statement that was scanned
- * @param issues     findings; empty when the statement is clean
- * @param parseError non-null when the statement could not be parsed into an AST
+ * @param statement  被扫描的语句
+ * @param issues     发现的问题；为空表示这条语句是干净的
+ * @param parseError 无法解析成 AST 时的错误信息，正常为 {@code null}
  */
 public record ScanResult(SqlStatement statement, List<Issue> issues, String parseError) {
 

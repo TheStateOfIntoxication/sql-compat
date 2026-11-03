@@ -11,12 +11,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * R014 - MySQL {@code TINYINT(1)} used as a boolean.
+ * R014 —— 当作布尔用的 MySQL {@code TINYINT(1)}。
  *
- * <p>Kingbase / PostgreSQL have a real {@code BOOLEAN}. The migration trap is the display width:
- * {@code TINYINT(4)} is a number, {@code TINYINT(1)} is a de-facto boolean, and a careless
- * {@code TINYINT → SMALLINT} conversion silently turns a boolean into an integer that no longer
- * round-trips through JDBC {@code getBoolean()}.
+ * <p>Kingbase / PostgreSQL 有真正的 {@code BOOLEAN}。迁移陷阱在于显示宽度：
+ * {@code TINYINT(4)} 是数字，{@code TINYINT(1)} 是事实上的布尔；一旦粗放地
+ * {@code TINYINT → SMALLINT}，数据还在，但 JDBC {@code getBoolean()} 与 ORM 的布尔映射会失效。
  */
 public final class TinyIntBooleanRule implements DialectRule {
 
@@ -30,7 +29,7 @@ public final class TinyIntBooleanRule implements DialectRule {
 
     @Override
     public String name() {
-        return "TINYINT(1) carries boolean semantics";
+        return "TINYINT(1) 承载布尔语义";
     }
 
     @Override
@@ -40,12 +39,12 @@ public final class TinyIntBooleanRule implements DialectRule {
 
     @Override
     public String description() {
-        return "TINYINT(1) is MySQL's de-facto boolean; map it to BOOLEAN, not SMALLINT.";
+        return "TINYINT(1) 是 MySQL 事实上的布尔，应映射为 BOOLEAN 而不是 SMALLINT。";
     }
 
     @Override
     public String suggestion() {
-        return "flag TINYINT(1) -> flag BOOLEAN   (do not map it to SMALLINT)";
+        return "flag TINYINT(1) -> flag BOOLEAN（不要映射成 SMALLINT）";
     }
 
     @Override
@@ -57,8 +56,8 @@ public final class TinyIntBooleanRule implements DialectRule {
                     id(),
                     name(),
                     defaultSeverity(),
-                    "TINYINT(1) is used as a boolean. Mapping it to SMALLINT keeps the data but "
-                            + "breaks JDBC getBoolean() / ORM boolean mapping.",
+                    "TINYINT(1) 被当作布尔使用。映射成 SMALLINT 虽然能存数据，"
+                            + "但会破坏 JDBC getBoolean() / ORM 的布尔映射。",
                     matcher.group(),
                     suggestion(),
                     context.location()));

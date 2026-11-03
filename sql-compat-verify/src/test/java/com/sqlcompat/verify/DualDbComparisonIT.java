@@ -1,7 +1,6 @@
 package com.sqlcompat.verify;
 
 import com.sqlcompat.verify.db.DbEndpoint;
-import com.sqlcompat.verify.model.CaseOutcome;
 import com.sqlcompat.verify.model.ComparisonReport;
 import com.sqlcompat.verify.model.SqlCase;
 import com.sqlcompat.verify.model.Status;
@@ -17,10 +16,10 @@ import java.util.Objects;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Integration test against two live databases.
+ * 针对两个活库的集成测试。
  *
- * <p>Skipped unless {@code SQLCOMPAT_MYSQL_URL} and {@code SQLCOMPAT_PG_URL} are set, so
- * {@code mvn verify} stays green on a machine without Docker. CI sets both from service containers.
+ * <p>未设置 {@code SQLCOMPAT_MYSQL_URL} / {@code SQLCOMPAT_PG_URL} 时整类跳过，
+ * 因此在没有 Docker 的机器上 {@code mvn verify} 依然能通过。CI 用 service 容器注入这两个变量。
  */
 @EnabledIfEnvironmentVariable(named = "SQLCOMPAT_MYSQL_URL", matches = ".+")
 @EnabledIfEnvironmentVariable(named = "SQLCOMPAT_PG_URL", matches = ".+")
@@ -30,7 +29,7 @@ class DualDbComparisonIT {
         try {
             return Path.of(Objects.requireNonNull(getClass().getClassLoader().getResource(name)).toURI());
         } catch (Exception e) {
-            throw new IllegalStateException("Missing test resource: " + name, e);
+            throw new IllegalStateException("缺少测试资源：" + name, e);
         }
     }
 
@@ -54,7 +53,7 @@ class DualDbComparisonIT {
     }
 
     @Test
-    @DisplayName("portable cases agree across both databases")
+    @DisplayName("可移植的用例在两个库上结果一致")
     void portableCasesAgree() throws Exception {
         ComparisonReport report = run();
 
@@ -64,7 +63,7 @@ class DualDbComparisonIT {
     }
 
     @Test
-    @DisplayName("the known dialect traps are actually detected, not silently passed")
+    @DisplayName("已知的方言陷阱确实被检出，而不是静默通过")
     void knownTrapsAreDetected() throws Exception {
         ComparisonReport report = run();
 
@@ -75,13 +74,13 @@ class DualDbComparisonIT {
     }
 
     @Test
-    @DisplayName("the markdown report carries the rate and the difference detail")
+    @DisplayName("Markdown 报告带一致率与差异说明")
     void rendersReport() throws Exception {
         ComparisonReport report = run();
         String markdown = new ComparisonReportRenderer().render(report);
 
-        assertThat(markdown).contains("# sql-compat consistency report")
-                .contains("consistency rate")
+        assertThat(markdown).contains("# sql-compat 一致性报告")
+                .contains("一致率")
                 .contains(report.consistencyRateText());
         assertThat(report.outcomes()).allSatisfy(o -> assertThat(o.detail()).isNotNull());
     }

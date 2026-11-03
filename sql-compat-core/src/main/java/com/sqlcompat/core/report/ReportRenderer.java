@@ -3,13 +3,13 @@ package com.sqlcompat.core.report;
 import com.sqlcompat.core.model.Report;
 
 /**
- * Turns a {@link Report} into text.
+ * 把 {@link Report} 变成文本。
  *
- * <p>Renderers must be side-effect free; the caller decides where to write.
+ * <p>实现必须无副作用；写到哪里由调用方决定。
  */
 public interface ReportRenderer {
 
-    /** File extension the renderer produces, without the dot, e.g. {@code html}. */
+    /** 渲染产物的文件扩展名，不含点，例如 {@code html}。 */
     String extension();
 
     String render(Report report);

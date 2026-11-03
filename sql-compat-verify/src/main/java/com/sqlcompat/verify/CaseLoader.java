@@ -9,26 +9,25 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Stream;
 
 /**
- * Loads cases from a directory of {@code .sql} files.
+ * 从 {@code .sql} 文件目录加载用例。
  *
- * <p>One file is one case; the id is the file name without extension. A case is treated as
- * order-sensitive when the statement contains {@code ORDER BY}. Keeping the metadata in the file
- * name instead of a comment directive means the case list is obvious in a pull request diff and
- * there is no parser to get wrong.
+ * <p>一个文件就是一条用例，编号取文件名（去掉扩展名）；语句含 {@code ORDER BY} 时视为对行序敏感。
+ * 把元信息放在文件名而不是注释指令里，好处是拉 PR 时用例清单一眼可见，也没有解析器可写错。
  */
 public final class CaseLoader {
 
     public List<SqlCase> load(Path directory) throws IOException {
         if (!Files.isDirectory(directory)) {
-            throw new IOException("Cases directory not found: " + directory);
+            throw new IOException("用例目录不存在：" + directory);
         }
         List<SqlCase> cases = new ArrayList<>();
         try (Stream<Path> files = Files.list(directory)) {
             files.filter(Files::isRegularFile)
-                    .filter(p -> p.getFileName().toString().toLowerCase().endsWith(".sql"))
+                    .filter(p -> p.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".sql"))
                     .sorted(Comparator.comparing(p -> p.getFileName().toString()))
                     .forEach(p -> {
                         try {
@@ -37,7 +36,7 @@ public final class CaseLoader {
                                 cases.add(loaded);
                             }
                         } catch (IOException e) {
-                            throw new IllegalStateException("Failed to read case: " + p, e);
+                            throw new IllegalStateException("读取用例失败：" + p, e);
                         }
                     });
         }
@@ -53,7 +52,7 @@ public final class CaseLoader {
         }
         String id = file.getFileName().toString()
                 .replaceAll("(?i)\\.sql$", "");
-        boolean ordered = sql.toLowerCase(java.util.Locale.ROOT).contains("order by");
+        boolean ordered = sql.toLowerCase(Locale.ROOT).contains("order by");
         return new SqlCase(id, sql, ordered);
     }
 

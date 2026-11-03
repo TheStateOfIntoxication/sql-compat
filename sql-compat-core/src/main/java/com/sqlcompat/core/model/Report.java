@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Whole scan output. Rendered by a {@code ReportRenderer}.
+ * 一次完整扫描的输出，交由 {@code ReportRenderer} 渲染。
  */
 public record Report(
         String target,
@@ -42,7 +42,7 @@ public record Report(
         return counts;
     }
 
-    /** Highest severity found, or {@code null} when the scan is clean. */
+    /** 出现过的最高级别；扫描结果干净时返回 {@code null}。 */
     public Severity worstSeverity() {
         Severity worst = null;
         for (ScanResult r : results) {

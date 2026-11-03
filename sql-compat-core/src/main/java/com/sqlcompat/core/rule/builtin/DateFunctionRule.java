@@ -8,16 +8,17 @@ import com.sqlcompat.core.rule.RuleContext;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * R020 - MySQL date arithmetic and date parsing functions.
+ * R020 —— MySQL 的日期运算与日期解析函数。
  *
- * <p>{@code DATE_ADD} / {@code DATE_SUB} / {@code STR_TO_DATE} / {@code UNIX_TIMESTAMP} do not
- * exist on Kingbase / PostgreSQL. They are the most common leftovers in reporting SQL, and they
- * are easy to miss because the statements around them are otherwise portable.
+ * <p>{@code DATE_ADD} / {@code DATE_SUB} / {@code STR_TO_DATE} / {@code UNIX_TIMESTAMP}
+ * 在 Kingbase / PostgreSQL 上都不存在。它们是报表 SQL 里最常见的遗留，而且周围的语句往往都可移植，
+ * 所以特别容易漏。
  */
 public final class DateFunctionRule implements DialectRule {
 
@@ -39,7 +40,7 @@ public final class DateFunctionRule implements DialectRule {
 
     @Override
     public String name() {
-        return "MySQL date functions have no equivalent";
+        return "MySQL 日期函数没有对应实现";
     }
 
     @Override
@@ -49,7 +50,7 @@ public final class DateFunctionRule implements DialectRule {
 
     @Override
     public String description() {
-        return "DATE_ADD / DATE_SUB / STR_TO_DATE / UNIX_TIMESTAMP are MySQL-only.";
+        return "DATE_ADD / DATE_SUB / STR_TO_DATE / UNIX_TIMESTAMP 是 MySQL 专有函数。";
     }
 
     @Override
@@ -63,14 +64,14 @@ public final class DateFunctionRule implements DialectRule {
         Matcher matcher = PATTERN.matcher(sql);
         List<Issue> issues = new ArrayList<>();
         while (matcher.find()) {
-            String function = matcher.group(1).toLowerCase(java.util.Locale.ROOT);
+            String function = matcher.group(1).toLowerCase(Locale.ROOT);
             int end = Math.min(sql.length(), matcher.end() + 50);
             issues.add(new Issue(
                     id(),
                     name(),
                     defaultSeverity(),
-                    function.toUpperCase(java.util.Locale.ROOT) + " is MySQL-only; the interval "
-                            + "and format-string syntax differs on Kingbase/PostgreSQL.",
+                    function.toUpperCase(Locale.ROOT) + " 是 MySQL 专有；区间与格式串语法在 "
+                            + "Kingbase/PostgreSQL 上都不同。",
                     sql.substring(matcher.start(), end).replaceAll("\\s+", " ").trim(),
                     REWRITES.get(function),
                     context.location()));

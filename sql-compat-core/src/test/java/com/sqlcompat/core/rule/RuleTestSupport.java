@@ -7,7 +7,7 @@ import com.sqlcompat.core.model.SqlStatement;
 import java.util.List;
 
 /**
- * Test helper: runs a single rule against an inline SQL string.
+ * 测试辅助类：对一段纯 SQL 单独跑一条规则。
  */
 public final class RuleTestSupport {
 

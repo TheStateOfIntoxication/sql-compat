@@ -12,10 +12,9 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Batch 1 (functions): R008 GROUP_CONCAT, R012 REGEXP, R013 JSON_EXTRACT.
+ * 批 1（函数类）：R008 GROUP_CONCAT、R012 REGEXP、R013 JSON_EXTRACT。
  *
- * <p>Every rule gets at least one positive case and one negative case. The negative case
- * matters more: a rule that cries wolf gets switched off within a week.
+ * <p>每条规则至少一个正例和一个反例。反例更重要：一条爱喊狼来了的规则，一周之内就会被关掉。
  */
 class FunctionRulesTest {
 
@@ -26,7 +25,7 @@ class FunctionRulesTest {
         private final DialectRule rule = new GroupConcatRule();
 
         @Test
-        @DisplayName("detects GROUP_CONCAT")
+        @DisplayName("检出 GROUP_CONCAT")
         void detects() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "SELECT GROUP_CONCAT(a.name) FROM demo_asset a WHERE a.owner_id = 1");
@@ -37,7 +36,7 @@ class FunctionRulesTest {
         }
 
         @Test
-        @DisplayName("mentions the separator argument when SEPARATOR is used")
+        @DisplayName("用了 SEPARATOR 时在说明里点出来")
         void mentionsSeparator() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "SELECT GROUP_CONCAT(a.name SEPARATOR '|') FROM demo_asset a");
@@ -47,7 +46,7 @@ class FunctionRulesTest {
         }
 
         @Test
-        @DisplayName("stays silent on STRING_AGG")
+        @DisplayName("STRING_AGG 不应误报")
         void silentOnStringAgg() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "SELECT STRING_AGG(a.name, ',') FROM demo_asset a");
@@ -63,7 +62,7 @@ class FunctionRulesTest {
         private final DialectRule rule = new RegexpOperatorRule();
 
         @Test
-        @DisplayName("detects REGEXP")
+        @DisplayName("检出 REGEXP")
         void detectsRegexp() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "SELECT a.id FROM demo_asset a WHERE a.code REGEXP '^AB[0-9]+$'");
@@ -74,7 +73,7 @@ class FunctionRulesTest {
         }
 
         @Test
-        @DisplayName("detects RLIKE")
+        @DisplayName("检出 RLIKE")
         void detectsRlike() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "SELECT a.id FROM demo_asset a WHERE a.code RLIKE '^AB'");
@@ -83,7 +82,7 @@ class FunctionRulesTest {
         }
 
         @Test
-        @DisplayName("stays silent on the ~ operator")
+        @DisplayName("~ 运算符不应误报")
         void silentOnTilde() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "SELECT a.id FROM demo_asset a WHERE a.code ~ '^AB[0-9]+$'");
@@ -99,7 +98,7 @@ class FunctionRulesTest {
         private final DialectRule rule = new JsonExtractRule();
 
         @Test
-        @DisplayName("detects JSON_EXTRACT")
+        @DisplayName("检出 JSON_EXTRACT，并提示 ->> 的作用")
         void detects() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "SELECT JSON_EXTRACT(a.attrs, '$.owner') FROM demo_asset a");
@@ -110,7 +109,7 @@ class FunctionRulesTest {
         }
 
         @Test
-        @DisplayName("stays silent on the arrow operators")
+        @DisplayName("箭头运算符不应误报")
         void silentOnArrow() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "SELECT a.attrs ->> 'owner' FROM demo_asset a");

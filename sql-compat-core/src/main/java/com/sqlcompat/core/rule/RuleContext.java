@@ -6,10 +6,9 @@ import com.sqlcompat.core.model.SqlStatement;
 import java.util.Locale;
 
 /**
- * Everything a rule needs about one statement.
+ * 规则看到的单条语句上下文。
  *
- * <p>The raw SQL is always available; the AST is available only when the parser
- * understood the statement ({@link #hasAst()}).
+ * <p>原始 SQL 始终可用；只有解析器认得出这条语句时才能拿到 AST（见 {@link #hasAst()}）。
  */
 public final class RuleContext {
 
@@ -31,7 +30,7 @@ public final class RuleContext {
         return statement.sqlText();
     }
 
-    /** Lower-cased SQL, for case-insensitive matching without allocating in every rule. */
+    /** 已转小写的 SQL，避免每条规则各自转换分配。 */
     public String lowerCaseSql() {
         return lowerCaseSql;
     }
@@ -40,7 +39,7 @@ public final class RuleContext {
         return statement.location();
     }
 
-    /** AST node, typed as {@code Object} so rules do not need jsqlparser on their classpath. */
+    /** AST 节点，类型声明为 {@code Object}，这样规则类不必依赖 jsqlparser。 */
     public Object ast() {
         return ast;
     }

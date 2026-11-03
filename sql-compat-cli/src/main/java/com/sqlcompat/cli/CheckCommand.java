@@ -21,24 +21,24 @@ import java.util.concurrent.Callable;
 @Command(
         name = "check",
         mixinStandardHelpOptions = true,
-        description = "Scan mapper XML / SQL files and write a compatibility report.")
+        description = "扫描 Mapper XML / SQL 文件并输出兼容性报告。")
 public final class CheckCommand implements Callable<Integer> {
 
     @Option(names = {"-i", "--input"}, required = true,
-            description = "Mapper XML file, .sql file, or a directory to scan.")
+            description = "要扫描的 Mapper XML 文件、.sql 文件或目录。")
     Path input;
 
     @Option(names = {"-o", "--output"},
-            description = "Report file. Defaults to sql-compat-report.<ext> in the current directory.")
+            description = "报告输出路径，默认输出到当前目录的 sql-compat-report.<ext>。")
     Path output;
 
     @Option(names = {"-f", "--format"}, defaultValue = "html",
-            description = "Report format: html | md. Default: ${DEFAULT-VALUE}")
+            description = "报告格式：html | md。默认：${DEFAULT-VALUE}")
     String format;
 
     @Option(names = {"--fail-on"},
-            description = "Exit with code 1 when an issue of this severity or above is found: "
-                    + "BLOCKER | MAJOR | MINOR | INFO. Default: never fail.")
+            description = "出现该级别及以上的问题时以退出码 1 结束："
+                    + "BLOCKER | MAJOR | MINOR | INFO。默认：不因问题而失败。")
     Severity failOn;
 
     @Override
@@ -59,7 +59,7 @@ public final class CheckCommand implements Callable<Integer> {
         if (failOn != null) {
             Severity worst = report.worstSeverity();
             if (worst != null && worst.atLeast(failOn)) {
-                System.err.printf("FAILED: worst severity %s >= %s%n", worst, failOn);
+                System.err.printf(Locale.ROOT, "失败：最高级别 %s 达到或超过阈值 %s%n", worst, failOn);
                 return 1;
             }
         }
@@ -67,17 +67,17 @@ public final class CheckCommand implements Callable<Integer> {
     }
 
     private void printSummary(Report report, Path target) {
-        System.out.printf(Locale.ROOT, "scanned %d statements in %d ms%n",
+        System.out.printf(Locale.ROOT, "共扫描 %d 条语句，耗时 %d ms%n",
                 report.statementCount(), report.elapsed().toMillis());
-        System.out.printf(Locale.ROOT, "issues: %d  (blocker=%d major=%d minor=%d info=%d)%n",
+        System.out.printf(Locale.ROOT, "问题 %d 个（blocker=%d major=%d minor=%d info=%d）%n",
                 report.issueCount(),
                 report.issueCountBySeverity().getOrDefault(Severity.BLOCKER, 0),
                 report.issueCountBySeverity().getOrDefault(Severity.MAJOR, 0),
                 report.issueCountBySeverity().getOrDefault(Severity.MINOR, 0),
                 report.issueCountBySeverity().getOrDefault(Severity.INFO, 0));
         if (report.parseErrorCount() > 0) {
-            System.out.printf(Locale.ROOT, "parse failures: %d%n", report.parseErrorCount());
+            System.out.printf(Locale.ROOT, "解析失败 %d 条%n", report.parseErrorCount());
         }
-        System.out.println("report written to " + target.toAbsolutePath());
+        System.out.println("报告已写入 " + target.toAbsolutePath());
     }
 }

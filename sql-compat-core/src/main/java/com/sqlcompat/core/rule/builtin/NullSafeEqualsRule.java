@@ -11,11 +11,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * R016 - MySQL null-safe equality operator {@code <=>}.
+ * R016 —— MySQL 的 NULL 安全等于运算符 {@code <=>}。
  *
- * <p>MySQL uses {@code a <=> b} to compare values where NULL equals NULL. Kingbase / PostgreSQL
- * use the SQL standard {@code a IS NOT DISTINCT FROM b}. There is no operator form, so this fails
- * at parse time — but the expression is easy to miss inside a long {@code <if>} block.
+ * <p>MySQL 用 {@code a <=> b} 表示"NULL 等于 NULL 也算相等"。Kingbase / PostgreSQL 用
+ * SQL 标准的 {@code a IS NOT DISTINCT FROM b}，没有运算符形式，所以是解析期报错
+ * —— 但这种表达式常常藏在很长的 {@code <if>} 块里，很容易被漏掉。
  */
 public final class NullSafeEqualsRule implements DialectRule {
 
@@ -28,7 +28,7 @@ public final class NullSafeEqualsRule implements DialectRule {
 
     @Override
     public String name() {
-        return "<=> must become IS NOT DISTINCT FROM";
+        return "<=> 需改为 IS NOT DISTINCT FROM";
     }
 
     @Override
@@ -38,7 +38,7 @@ public final class NullSafeEqualsRule implements DialectRule {
 
     @Override
     public String description() {
-        return "MySQL null-safe equality <=> has no operator equivalent on Kingbase/PostgreSQL.";
+        return "MySQL 的 NULL 安全等于 <=> 在 Kingbase/PostgreSQL 上没有运算符等价形式。";
     }
 
     @Override
@@ -58,7 +58,7 @@ public final class NullSafeEqualsRule implements DialectRule {
                     id(),
                     name(),
                     defaultSeverity(),
-                    "The MySQL null-safe equality operator does not exist on Kingbase/PostgreSQL.",
+                    "MySQL 的 NULL 安全等于运算符在 Kingbase/PostgreSQL 上不存在。",
                     sql.substring(start, end).replaceAll("\\s+", " ").trim(),
                     suggestion(),
                     context.location()));

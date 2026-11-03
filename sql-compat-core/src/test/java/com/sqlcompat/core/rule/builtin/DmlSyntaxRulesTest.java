@@ -12,8 +12,8 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Batch 2 (DML / DDL syntax): R004 paging, R005 INSERT IGNORE, R006 upsert,
- * R007 AUTO_INCREMENT, R019 REPLACE INTO.
+ * 批 2（DML / DDL 语法）：R004 分页、R005 INSERT IGNORE、R006 upsert、
+ * R007 AUTO_INCREMENT、R019 REPLACE INTO。
  */
 class DmlSyntaxRulesTest {
 
@@ -24,7 +24,7 @@ class DmlSyntaxRulesTest {
         private final DialectRule rule = new PagingSyntaxRule();
 
         @Test
-        @DisplayName("swaps the arguments in the suggestion")
+        @DisplayName("建议里把两个参数位置换过来")
         void swapsArguments() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "SELECT a.id FROM demo_asset a ORDER BY a.id LIMIT 10, 20");
@@ -35,7 +35,7 @@ class DmlSyntaxRulesTest {
         }
 
         @Test
-        @DisplayName("handles MyBatis placeholders")
+        @DisplayName("能处理 MyBatis 占位符")
         void handlesPlaceholders() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "SELECT a.id FROM demo_asset a LIMIT #{offset}, #{pageSize}");
@@ -45,7 +45,7 @@ class DmlSyntaxRulesTest {
         }
 
         @Test
-        @DisplayName("stays silent on LIMIT size OFFSET offset")
+        @DisplayName("LIMIT size OFFSET offset 不应误报")
         void silentOnOffsetForm() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "SELECT a.id FROM demo_asset a LIMIT 20 OFFSET 10");
@@ -54,7 +54,7 @@ class DmlSyntaxRulesTest {
         }
 
         @Test
-        @DisplayName("stays silent on a plain single-argument LIMIT")
+        @DisplayName("单参数 LIMIT 不应误报")
         void silentOnSingleArg() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "SELECT a.id FROM demo_asset a LIMIT 20");
@@ -70,18 +70,18 @@ class DmlSyntaxRulesTest {
         private final DialectRule rule = new InsertIgnoreRule();
 
         @Test
-        @DisplayName("detects INSERT IGNORE and warns about the semantic gap")
+        @DisplayName("检出 INSERT IGNORE，并提示语义差异")
         void detects() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "INSERT IGNORE INTO demo_asset (id, name) VALUES (1, 'a')");
 
             assertThat(issues).hasSize(1);
             assertThat(issues.getFirst().ruleId()).isEqualTo("R005");
-            assertThat(issues.getFirst().message()).contains("data errors");
+            assertThat(issues.getFirst().message()).contains("数据错误");
         }
 
         @Test
-        @DisplayName("stays silent on a plain INSERT")
+        @DisplayName("普通 INSERT 不应误报")
         void silentOnPlainInsert() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "INSERT INTO demo_asset (id, name) VALUES (1, 'a')");
@@ -97,7 +97,7 @@ class DmlSyntaxRulesTest {
         private final DialectRule rule = new UpsertRule();
 
         @Test
-        @DisplayName("detects the clause and names VALUES() refs")
+        @DisplayName("检出 upsert，并点名 VALUES() 要改成 EXCLUDED")
         void detectsWithValuesRef() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "INSERT INTO demo_asset (id, name) VALUES (1, 'a') "
@@ -109,18 +109,18 @@ class DmlSyntaxRulesTest {
         }
 
         @Test
-        @DisplayName("detects the clause without VALUES() refs")
+        @DisplayName("没有 VALUES() 时提示冲突目标列是强制的")
         void detectsWithoutValuesRef() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "INSERT INTO demo_asset (id, name) VALUES (1, 'a') "
                             + "ON DUPLICATE KEY UPDATE name = 'b'");
 
             assertThat(issues).hasSize(1);
-            assertThat(issues.getFirst().message()).contains("mandatory");
+            assertThat(issues.getFirst().message()).contains("强制");
         }
 
         @Test
-        @DisplayName("stays silent on ON CONFLICT")
+        @DisplayName("ON CONFLICT 不应误报")
         void silentOnConflict() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "INSERT INTO demo_asset (id, name) VALUES (1, 'a') "
@@ -137,18 +137,18 @@ class DmlSyntaxRulesTest {
         private final DialectRule rule = new AutoIncrementRule();
 
         @Test
-        @DisplayName("detects AUTO_INCREMENT in DDL and mentions sequence repositioning")
+        @DisplayName("DDL 中检出 AUTO_INCREMENT，并提示序列要调到最大 id 之后")
         void detectsInDdl() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "CREATE TABLE demo_asset (id BIGINT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(64))");
 
             assertThat(issues).hasSize(1);
             assertThat(issues.getFirst().ruleId()).isEqualTo("R007");
-            assertThat(issues.getFirst().message()).contains("repositioned");
+            assertThat(issues.getFirst().message()).contains("序列");
         }
 
         @Test
-        @DisplayName("stays silent on an identity column")
+        @DisplayName("自增列写法不应误报")
         void silentOnIdentity() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "CREATE TABLE demo_asset (id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY)");
@@ -164,18 +164,18 @@ class DmlSyntaxRulesTest {
         private final DialectRule rule = new ReplaceIntoRule();
 
         @Test
-        @DisplayName("detects REPLACE INTO and explains the delete-then-insert semantics")
+        @DisplayName("检出 REPLACE INTO，并说明先删后插的语义")
         void detects() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "REPLACE INTO demo_asset (id, name) VALUES (1, 'a')");
 
             assertThat(issues).hasSize(1);
             assertThat(issues.getFirst().ruleId()).isEqualTo("R019");
-            assertThat(issues.getFirst().message()).contains("delete-then-insert");
+            assertThat(issues.getFirst().message()).contains("先删后插");
         }
 
         @Test
-        @DisplayName("does not fire on REPLACE() the string function")
+        @DisplayName("REPLACE() 字符串函数不应误报")
         void silentOnReplaceFunction() {
             List<Issue> issues = RuleTestSupport.check(rule,
                     "SELECT REPLACE(a.name, '-', '') FROM demo_asset a");

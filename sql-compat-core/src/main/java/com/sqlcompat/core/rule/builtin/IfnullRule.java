@@ -12,9 +12,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * R001 - MySQL {@code IFNULL(a, b)} has no counterpart in Kingbase / PostgreSQL.
+ * R001 —— MySQL 的 {@code IFNULL(a, b)} 在 Kingbase / PostgreSQL 中没有对应函数。
  *
- * <p>Rewrite with the SQL standard {@code COALESCE(a, b)}.
+ * <p>改写为 SQL 标准的 {@code COALESCE(a, b)}。
  */
 public final class IfnullRule implements DialectRule {
 
@@ -27,7 +27,7 @@ public final class IfnullRule implements DialectRule {
 
     @Override
     public String name() {
-        return "IFNULL has no Kingbase equivalent";
+        return "IFNULL 在 Kingbase 中无对应函数";
     }
 
     @Override
@@ -37,7 +37,7 @@ public final class IfnullRule implements DialectRule {
 
     @Override
     public String description() {
-        return "MySQL-only IFNULL(a, b) is not available on Kingbase/PostgreSQL.";
+        return "MySQL 专有的 IFNULL(a, b) 在 Kingbase/PostgreSQL 上不存在。";
     }
 
     @Override
@@ -57,7 +57,7 @@ public final class IfnullRule implements DialectRule {
                     id(),
                     name(),
                     defaultSeverity(),
-                    "IFNULL is MySQL-only and will fail to execute on Kingbase/PostgreSQL.",
+                    "IFNULL 是 MySQL 专有函数，在 Kingbase/PostgreSQL 上执行会直接报错。",
                     sql.substring(start, end).replaceAll("\\s+", " ").trim().toLowerCase(Locale.ROOT),
                     suggestion(),
                     context.location()));

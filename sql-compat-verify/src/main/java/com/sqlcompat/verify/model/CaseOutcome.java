@@ -1,15 +1,13 @@
 package com.sqlcompat.verify.model;
 
-import java.util.List;
-
 /**
- * One case, both sides, and the verdict.
+ * 一条用例、两侧结果，以及判定。
  *
- * @param sqlCase case definition
- * @param status  verdict
- * @param detail  human readable reason; for DIFFERENT it explains the first mismatching row
- * @param mysql   MySQL outcome
- * @param postgres PostgreSQL outcome
+ * @param sqlCase  用例定义
+ * @param status   判定结果
+ * @param detail   可读原因；DIFFERENT 时说明第一处不一致的位置
+ * @param mysql    MySQL 侧结果
+ * @param postgres PostgreSQL 侧结果
  */
 public record CaseOutcome(
         SqlCase sqlCase,

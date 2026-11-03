@@ -9,8 +9,9 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 /**
- * R003 - MySQL allows {@code DELETE ... LIMIT n} and {@code UPDATE ... LIMIT n}.
- * Kingbase / PostgreSQL do not: use a sub-select on {@code ctid} or a key range instead.
+ * R003 —— MySQL 允许 {@code DELETE ... LIMIT n} / {@code UPDATE ... LIMIT n}。
+ *
+ * <p>Kingbase / PostgreSQL 不支持（语法直接报错），需改成用 {@code ctid} 子查询或主键区间定位。
  */
 public final class DeleteUpdateLimitRule implements DialectRule {
 
@@ -25,7 +26,7 @@ public final class DeleteUpdateLimitRule implements DialectRule {
 
     @Override
     public String name() {
-        return "DELETE/UPDATE ... LIMIT is not supported";
+        return "DELETE/UPDATE 不支持 LIMIT";
     }
 
     @Override
@@ -35,7 +36,7 @@ public final class DeleteUpdateLimitRule implements DialectRule {
 
     @Override
     public String description() {
-        return "MySQL supports LIMIT on DELETE/UPDATE; Kingbase/PostgreSQL do not.";
+        return "MySQL 支持在 DELETE/UPDATE 上带 LIMIT；Kingbase/PostgreSQL 不支持。";
     }
 
     @Override
@@ -54,7 +55,7 @@ public final class DeleteUpdateLimitRule implements DialectRule {
                 id(),
                 name(),
                 defaultSeverity(),
-                "LIMIT is not allowed on " + keyword.toUpperCase() + " in Kingbase/PostgreSQL.",
+                keyword.toUpperCase() + " 语句带 LIMIT，在 Kingbase/PostgreSQL 上是语法错误。",
                 keyword + " ... limit",
                 suggestion(),
                 context.location()));

@@ -5,19 +5,19 @@ import com.sqlcompat.core.model.Severity;
 import com.sqlcompat.core.rule.DialectRule;
 import com.sqlcompat.core.rule.RuleContext;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * R009 - MySQL backtick-quoted identifiers.
+ * R009 —— MySQL 的反引号标识符。
  *
- * <p>Kingbase / PostgreSQL use double quotes (and fold unquoted identifiers to lower case,
- * unlike MySQL on Windows where the default is case-insensitive). A statement that keeps
- * backticks is a syntax error.
+ * <p>Kingbase / PostgreSQL 用双引号，且未加引号的标识符会折叠为小写（MySQL 在 Windows 下
+ * 默认大小写不敏感）。保留反引号就是语法错误。
  *
- * <p>Known limitation: backticks inside a string literal also match. That is a false positive
- * by design trade-off — it is rarer than the real thing, and the report shows the snippet so a
- * human can dismiss it in one glance.
+ * <p>已知局限：字符串字面量里的反引号也会命中。这是有意的取舍 —— 真问题远比字面量常见，
+ * 且报告会展示片段，人工一眼可排除。
  */
 public final class BacktickQuoteRule implements DialectRule {
 
@@ -30,7 +30,7 @@ public final class BacktickQuoteRule implements DialectRule {
 
     @Override
     public String name() {
-        return "Backtick-quoted identifiers must use double quotes";
+        return "反引号标识符需改为双引号";
     }
 
     @Override
@@ -40,28 +40,28 @@ public final class BacktickQuoteRule implements DialectRule {
 
     @Override
     public String description() {
-        return "MySQL quotes identifiers with backticks; Kingbase/PostgreSQL use double quotes.";
+        return "MySQL 用反引号引用标识符；Kingbase/PostgreSQL 用双引号。";
     }
 
     @Override
     public String suggestion() {
-        return "`col` -> \"col\"   (or drop the quotes when the identifier is lower case)";
+        return "`col` -> \"col\"（标识符本身是小写时也可以直接去掉引号）";
     }
 
     @Override
     public List<Issue> check(RuleContext context) {
         var matcher = PATTERN.matcher(context.sql());
-        List<Issue> issues = new java.util.ArrayList<>();
+        List<Issue> issues = new ArrayList<>();
         while (matcher.find()) {
             String snippet = matcher.group();
+            String inner = snippet.substring(1, snippet.length() - 1);
             issues.add(new Issue(
                     id(),
                     name(),
                     defaultSeverity(),
-                    "Backtick quoting is MySQL-only syntax.",
+                    "反引号引用是 MySQL 专有语法。",
                     snippet,
-                    "`" + snippet.substring(1, snippet.length() - 1) + "` -> \""
-                            + snippet.substring(1, snippet.length() - 1) + "\"",
+                    "`" + inner + "` -> \"" + inner + "\"",
                     context.location()));
         }
         return issues;

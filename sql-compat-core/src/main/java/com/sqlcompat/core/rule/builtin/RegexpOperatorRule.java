@@ -11,10 +11,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * R012 - MySQL {@code col REGEXP 'pattern'} / {@code RLIKE}.
+ * R012 —— MySQL 的 {@code col REGEXP 'pattern'} / {@code RLIKE}。
  *
- * <p>Kingbase / PostgreSQL use the {@code ~} operator (case-sensitive) or {@code ~*}
- * (case-insensitive).
+ * <p>Kingbase / PostgreSQL 用 {@code ~} 运算符（区分大小写），不区分大小写用 {@code ~*}。
  */
 public final class RegexpOperatorRule implements DialectRule {
 
@@ -27,7 +26,7 @@ public final class RegexpOperatorRule implements DialectRule {
 
     @Override
     public String name() {
-        return "REGEXP / RLIKE must become the ~ operator";
+        return "REGEXP / RLIKE 需改为 ~ 运算符";
     }
 
     @Override
@@ -37,12 +36,12 @@ public final class RegexpOperatorRule implements DialectRule {
 
     @Override
     public String description() {
-        return "MySQL REGEXP / RLIKE operators do not exist on Kingbase/PostgreSQL.";
+        return "MySQL 的 REGEXP / RLIKE 运算符在 Kingbase/PostgreSQL 上不存在。";
     }
 
     @Override
     public String suggestion() {
-        return "col REGEXP 'p' -> col ~ 'p'   (case-insensitive: col ~* 'p')";
+        return "col REGEXP 'p' -> col ~ 'p'（不区分大小写用 col ~* 'p'）";
     }
 
     @Override
@@ -58,7 +57,7 @@ public final class RegexpOperatorRule implements DialectRule {
                     id(),
                     name(),
                     defaultSeverity(),
-                    "MySQL regex operator found: use ~ (or ~* for case-insensitive) on Kingbase/PostgreSQL.",
+                    "检测到 MySQL 正则运算符；Kingbase/PostgreSQL 请改用 ~（区分大小写）或 ~*（不区分大小写）。",
                     snippet,
                     suggestion(),
                     context.location()));

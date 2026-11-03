@@ -13,15 +13,13 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Runs cases against one endpoint and measures how long they take.
+ * 在单个连接目标上执行用例并计时。
  *
- * <p>One connection is opened per endpoint and reused: opening a connection per case would put
- * TCP handshake and authentication inside the measured window, and the two drivers do not cost
- * the same there.
+ * <p>每个目标只开一个连接、全程复用：如果每条用例都新建连接，TCP 握手与认证会被算进测量窗口，
+ * 而两个驱动在这上面的开销并不相同。
  *
- * <p>Timing is a median over a few iterations after a warm-up round. This is an indicative
- * cross-engine comparison, <b>not</b> a benchmark — different engines, different optimizers,
- * different default storage.
+ * <p>耗时取预热后若干轮的中位数。这是**指示性的跨引擎对比**，不是 benchmark ——
+ * 引擎不同、优化器不同、默认存储也不同。
  */
 public final class DbProbe implements AutoCloseable {
 
@@ -43,7 +41,7 @@ public final class DbProbe implements AutoCloseable {
         return endpoint;
     }
 
-    /** Executes a statement once, without warm-up or measurement. Used for setup scripts. */
+    /** 只执行一次，不预热也不计时。用于建表造数脚本。 */
     public QueryOutcome runOnce(String sql) {
         long started = System.nanoTime();
         try {
@@ -55,7 +53,7 @@ public final class DbProbe implements AutoCloseable {
         }
     }
 
-    /** Executes a statement and returns normalized rows plus the median elapsed time. */
+    /** 执行语句，返回归一化后的行与中位耗时。 */
     public QueryOutcome run(String sql) {
         List<List<String>> rows = null;
         List<Long> samples = new ArrayList<>(MEASURED_ITERATIONS);
@@ -83,7 +81,7 @@ public final class DbProbe implements AutoCloseable {
                     return readRows(rs);
                 }
             }
-            // DML: compare the affected row count instead of a result set.
+            // DML：比较影响行数，而不是结果集。
             return List.of(List.of(String.valueOf(statement.getUpdateCount())));
         }
     }

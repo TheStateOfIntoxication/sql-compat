@@ -12,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class DateFormatAndLimitRuleTest {
 
     @Test
-    @DisplayName("R002 detects DATE_FORMAT")
+    @DisplayName("R002 检出 DATE_FORMAT")
     void detectsDateFormat() {
         List<Issue> issues = RuleTestSupport.check(new DateFormatRule(),
                 "SELECT DATE_FORMAT(a.created_at, '%Y-%m-%d') FROM demo_asset a");
@@ -23,7 +23,7 @@ class DateFormatAndLimitRuleTest {
     }
 
     @Test
-    @DisplayName("R003 detects DELETE ... LIMIT")
+    @DisplayName("R003 检出 DELETE ... LIMIT")
     void detectsDeleteLimit() {
         List<Issue> issues = RuleTestSupport.check(new DeleteUpdateLimitRule(),
                 "DELETE FROM demo_task WHERE created_at < '2024-01-01' LIMIT 1000");
@@ -33,7 +33,7 @@ class DateFormatAndLimitRuleTest {
     }
 
     @Test
-    @DisplayName("R003 detects UPDATE ... LIMIT")
+    @DisplayName("R003 检出 UPDATE ... LIMIT")
     void detectsUpdateLimit() {
         List<Issue> issues = RuleTestSupport.check(new DeleteUpdateLimitRule(),
                 "UPDATE demo_task SET state = 'x' WHERE state = 'y' LIMIT 10");
@@ -42,7 +42,7 @@ class DateFormatAndLimitRuleTest {
     }
 
     @Test
-    @DisplayName("R003 stays silent on SELECT ... LIMIT")
+    @DisplayName("R003 对 SELECT ... LIMIT 不应误报")
     void silentOnSelectLimit() {
         List<Issue> issues = RuleTestSupport.check(new DeleteUpdateLimitRule(),
                 "SELECT a.id FROM demo_asset a ORDER BY a.id DESC LIMIT 10");

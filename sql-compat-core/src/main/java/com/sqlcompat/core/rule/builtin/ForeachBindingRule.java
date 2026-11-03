@@ -8,23 +8,18 @@ import com.sqlcompat.core.rule.RuleContext;
 import java.util.List;
 
 /**
- * R011 - MyBatis {@code <foreach>} and dialect-specific collection binding.
+ * R011 —— MyBatis {@code <foreach>} 生成集合参数带来的差异。
  *
- * <p>This rule does not test the SQL body: it flags statements that <b>contain</b> a
- * {@code <foreach>}, because the generated {@code IN (...)} list behaves differently across
- * dialects in three ways worth a manual review:
+ * <p>本规则不检查 SQL 正文，而是标记**含有** {@code <foreach>} 的语句，因为迁移后有三处需要人工确认：
  *
  * <ul>
- *   <li>an empty collection produces {@code IN ()} — a syntax error on both dialects, but MySQL
- *       tolerates it in a few contexts and PostgreSQL never does</li>
- *   <li>batch inserts built with {@code <foreach>} are exactly where {@code INSERT IGNORE} /
- *       {@code ON DUPLICATE KEY} tend to appear (see R005 / R006)</li>
- *   <li>PostgreSQL caps bound parameters at 65535 per statement — large batch inserts that are
- *       fine on MySQL can fail outright</li>
+ *   <li>空集合会生成 {@code IN ()} —— 两个方言都是语法错误，但 MySQL 在少数上下文里能容忍，
+ *       PostgreSQL 永远不忍</li>
+ *   <li>批量插入通常和 {@code INSERT IGNORE} / {@code ON DUPLICATE KEY} 一起出现（见 R005 / R006）</li>
+ *   <li>PostgreSQL 单语句绑定参数上限 65535，MySQL 侧没有这个限制</li>
  * </ul>
  *
- * <p>Severity is MINOR because the rule cannot know the collection size or emptiness; it is a
- * "review this" marker, not a defect.
+ * <p>定为 MINOR 而不是 BLOCKER：规则无法知道集合大小与否为空，这是"请复核"标记，不是缺陷判定。
  */
 public final class ForeachBindingRule implements DialectRule {
 
@@ -35,7 +30,7 @@ public final class ForeachBindingRule implements DialectRule {
 
     @Override
     public String name() {
-        return "<foreach> binding needs a manual review";
+        return "<foreach> 拼接结果需人工复核";
     }
 
     @Override
@@ -45,12 +40,12 @@ public final class ForeachBindingRule implements DialectRule {
 
     @Override
     public String description() {
-        return "Statements built with <foreach> need a size/emptiness review after migration.";
+        return "含 <foreach> 的语句，迁移后需复核空集合与参数上限。";
     }
 
     @Override
     public String suggestion() {
-        return "guard empty lists (IN (NULL) or a <if> wrapper) and keep batch size < 65535 rows";
+        return "守住空集合（IN (NULL) 或用 <if> 包一层），批量操作的单批行数控制在 65535 以内";
     }
 
     @Override
@@ -62,9 +57,8 @@ public final class ForeachBindingRule implements DialectRule {
                 id(),
                 name(),
                 defaultSeverity(),
-                "This statement builds its list with <foreach>. Check the empty-collection case "
-                        + "(IN () is a syntax error) and the bound-parameter limit (65535 per statement "
-                        + "on PostgreSQL) for batch operations.",
+                "该语句用 <foreach> 拼接列表。请复核两件事：空集合会生成 IN ()（语法错误），"
+                        + "以及批量操作是否超过 PostgreSQL 单语句 65535 个绑定参数的上限。",
                 "<foreach>",
                 suggestion(),
                 context.location()));

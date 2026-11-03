@@ -17,10 +17,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Runs a case set against MySQL and PostgreSQL and reports how much of it agrees.
+ * 把一套用例同时跑在 MySQL 与 PostgreSQL 上，报告其中有多少是一致的。
  *
- * <p>Setup scripts are applied to both databases before the cases run, so a fresh CI container
- * and a developer's local schema behave the same way.
+ * <p>用例执行前会先在两个库上应用建表造数脚本，这样全新的 CI 容器和开发者本地库表现一致。
  */
 public final class DualDbComparator {
 
@@ -34,8 +33,8 @@ public final class DualDbComparator {
     }
 
     /**
-     * @param setupSql  optional DDL + seed statements applied to both sides first
-     * @param cases     cases to run
+     * @param setupSql 可选：先在两库上执行的 DDL 与造数语句
+     * @param cases    要跑的用例
      */
     public ComparisonReport compare(Path setupSql, List<SqlCase> cases) throws IOException, SQLException {
         try (DbProbe mysqlProbe = new DbProbe(mysql);
@@ -63,13 +62,13 @@ public final class DualDbComparator {
             }
             QueryOutcome left = mysqlProbe.runOnce(sql);
             if (left.failed()) {
-                throw new SQLException("Setup failed on " + mysql.label() + ": " + left.error()
-                        + "\n  while running: " + sql);
+                throw new SQLException("建表造数在 " + mysql.label() + " 侧失败：" + left.error()
+                        + "\n  出错语句：" + sql);
             }
             QueryOutcome right = postgresProbe.runOnce(sql);
             if (right.failed()) {
-                throw new SQLException("Setup failed on " + postgres.label() + ": " + right.error()
-                        + "\n  while running: " + sql);
+                throw new SQLException("建表造数在 " + postgres.label() + " 侧失败：" + right.error()
+                        + "\n  出错语句：" + sql);
             }
         }
     }
