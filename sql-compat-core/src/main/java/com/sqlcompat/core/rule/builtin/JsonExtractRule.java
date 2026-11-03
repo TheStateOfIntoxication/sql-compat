@@ -2,6 +2,7 @@ package com.sqlcompat.core.rule.builtin;
 
 import com.sqlcompat.core.model.Issue;
 import com.sqlcompat.core.model.Severity;
+import com.sqlcompat.core.fix.FixSafety;
 import com.sqlcompat.core.rule.DialectRule;
 import com.sqlcompat.core.rule.RuleContext;
 
@@ -63,5 +64,25 @@ public final class JsonExtractRule implements DialectRule {
                     context.location()));
         }
         return issues;
+    }
+
+    @Override
+    public boolean fixable() {
+        return true;
+    }
+
+    @Override
+    public FixSafety fixSafety() {
+        // -> 与 ->> 的取舍属于业务语义（要不要保留 JSON 引号），必须人工确认。
+        return FixSafety.REVIEW;
+    }
+
+    @Override
+    public String fix(String sql) {
+        // 只处理单层路径 $.key，多级路径要拆成链式 ->>，留给人工。
+        Pattern call = Pattern.compile("\\bjson_extract\\s*\\(([^(),]+?)\\s*,\\s*'\\$\\.([A-Za-z0-9_]+)'\\s*\\)",
+                Pattern.CASE_INSENSITIVE);
+        return call.matcher(sql).replaceAll(match ->
+                match.group(1).strip() + " ->> '" + match.group(2) + "'");
     }
 }

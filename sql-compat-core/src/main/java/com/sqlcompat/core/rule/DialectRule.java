@@ -1,5 +1,6 @@
 package com.sqlcompat.core.rule;
 
+import com.sqlcompat.core.fix.FixSafety;
 import com.sqlcompat.core.model.Issue;
 import com.sqlcompat.core.model.Severity;
 
@@ -31,6 +32,29 @@ public interface DialectRule {
     /** 目标方言下的预期改写，显示在报告里。 */
     default String suggestion() {
         return "";
+    }
+
+    /** 是否支持自动改写。默认不支持：很多规则的改写需要人拍板，见 docs/manual-decisions.md。 */
+    default boolean fixable() {
+        return false;
+    }
+
+    /** 改写安全等级，仅在 {@link #fixable()} 为 {@code true} 时有意义。 */
+    default FixSafety fixSafety() {
+        return FixSafety.REVIEW;
+    }
+
+    /**
+     * 把文本中所有可改写的片段换成目标方言写法。
+     *
+     * <p>实现必须是**幂等**的：对已改写过的文本再调一次不得产生变化。
+     * 遇到无法安全判定的写法（例如不认识的格式串）应原样返回那一段，不要猜。
+     *
+     * @param sql 原始文本（可能是整份 Mapper XML，也可能是一个 .sql 文件）
+     * @return 改写后的文本；无法改写时返回入参
+     */
+    default String fix(String sql) {
+        return sql;
     }
 
     /**

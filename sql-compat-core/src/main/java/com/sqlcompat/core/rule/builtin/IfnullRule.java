@@ -2,6 +2,7 @@ package com.sqlcompat.core.rule.builtin;
 
 import com.sqlcompat.core.model.Issue;
 import com.sqlcompat.core.model.Severity;
+import com.sqlcompat.core.fix.FixSafety;
 import com.sqlcompat.core.rule.DialectRule;
 import com.sqlcompat.core.rule.RuleContext;
 
@@ -63,5 +64,21 @@ public final class IfnullRule implements DialectRule {
                     context.location()));
         }
         return issues;
+    }
+
+    @Override
+    public boolean fixable() {
+        return true;
+    }
+
+    @Override
+    public FixSafety fixSafety() {
+        return FixSafety.SAFE;
+    }
+
+    @Override
+    public String fix(String sql) {
+        // 只换函数名，参数原样保留 —— 这是完全等价的改写。
+        return PATTERN.matcher(sql).replaceAll("COALESCE(");
     }
 }

@@ -1,5 +1,6 @@
 package com.sqlcompat.core.rule.builtin;
 
+import com.sqlcompat.core.fix.FixSafety;
 import com.sqlcompat.core.model.Issue;
 import com.sqlcompat.core.model.Severity;
 import com.sqlcompat.core.rule.DialectRule;
@@ -66,5 +67,22 @@ public final class PagingSyntaxRule implements DialectRule {
                     context.location()));
         }
         return issues;
+    }
+
+    @Override
+    public boolean fixable() {
+        return true;
+    }
+
+    @Override
+    public FixSafety fixSafety() {
+        return FixSafety.SAFE;
+    }
+
+    @Override
+    public String fix(String sql) {
+        // 参数位置互换，语义不变。
+        return PATTERN.matcher(sql).replaceAll(match ->
+                "LIMIT " + match.group(2) + " OFFSET " + match.group(1));
     }
 }

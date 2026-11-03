@@ -2,6 +2,7 @@ package com.sqlcompat.core.rule.builtin;
 
 import com.sqlcompat.core.model.Issue;
 import com.sqlcompat.core.model.Severity;
+import com.sqlcompat.core.fix.FixSafety;
 import com.sqlcompat.core.rule.DialectRule;
 import com.sqlcompat.core.rule.RuleContext;
 
@@ -65,5 +66,25 @@ public final class BacktickQuoteRule implements DialectRule {
                     context.location()));
         }
         return issues;
+    }
+
+    @Override
+    public boolean fixable() {
+        return true;
+    }
+
+    @Override
+    public FixSafety fixSafety() {
+        // 引号替换本身无损，但 PG 的 "User" 区分大小写而 MySQL 不区分，
+        // 所以这条列为需确认：改完必须确认大小写折叠策略。
+        return FixSafety.REVIEW;
+    }
+
+    @Override
+    public String fix(String sql) {
+        return PATTERN.matcher(sql).replaceAll(match -> {
+            String inner = match.group().substring(1, match.group().length() - 1);
+            return "\"" + inner + "\"";
+        });
     }
 }
