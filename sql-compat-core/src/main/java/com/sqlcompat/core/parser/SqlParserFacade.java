@@ -33,11 +33,25 @@ public final class SqlParserFacade {
     }
 
     /**
-     * 把 MyBatis 的 {@code #{...}} / {@code ${...}} 占位符替换成解析器能接受的字面量，
-     * 保持 SQL 结构不变。
+     * 把 MyBatis 占位符替换成解析器能接受的字面量，保持 SQL 结构不变；
+     * 顺便剥掉 PL/SQL 的 {@code BEGIN ... END} 包裹。
+     *
+     * <p>剥 BEGIN/END 是安全的：AST 只用于分析、不用于回写。而 Oracle 风格的匿名块
+     * JSQLParser 根本不认 —— 与其整句丢掉，不如把它里面的 DML 解析出来。
      */
     private String sanitize(String sql) {
-        return sql.replaceAll("#\\{[^}]*}", "?")
+        String text = sql.replaceAll("#\\{[^}]*}", "?")
                 .replaceAll("\\$\\{[^}]*}", "t");
+        String stripped = text.strip();
+        if (stripped.regionMatches(true, 0, "begin", 0, 5)
+                && (stripped.length() == 5 || !Character.isLetterOrDigit(stripped.charAt(5)))) {
+            stripped = stripped.substring(5).strip();
+            if (stripped.toLowerCase(java.util.Locale.ROOT).endsWith(" end")) {
+                stripped = stripped.substring(0, stripped.length() - 4).strip();
+            } else if (stripped.toLowerCase(java.util.Locale.ROOT).endsWith("\nend")) {
+                stripped = stripped.substring(0, stripped.length() - 4).strip();
+            }
+        }
+        return stripped;
     }
 }

@@ -70,6 +70,7 @@ java -jar sql-compat-cli/target/sql-compat.jar check \
 | `--fix-all` | 连需要人工确认的改写一起执行（R002 / R009 / R013）。**改前先读 [docs/manual-decisions.md](docs/manual-decisions.md)** |
 | `--fix-out` | 改写输出目录，默认 `./sql-compat-fixed` |
 | `--in-place` | 直接在源目录改写。除特殊场景外不建议 |
+| `--ignore` | 忽略指定规则编号，逗号分隔（如 `R011` 或 `PARSE`），把报告收敛到关心的范围 |
 
 ### 自动改写
 
@@ -245,6 +246,8 @@ public final class InsertIgnoreRule implements DialectRule {
 - Kingbase 用 **PostgreSQL 16** 做近似验证：Kingbase 基于 PG，方言高度一致，但**不是** 1:1 实测
 - 分页/批量/DML 类规则靠 AST + 正则，MyBatis 动态 SQL 采用"展平"策略，极端嵌套场景可能漏判
 - 规则只覆盖高频场景，不做完整方言矩阵
+- 解析器的能力边界、动态标签展平的已知缺口、各规则的误报取舍，逐条记在 [docs/known-limitations.md](docs/known-limitations.md)
+  （真实项目实测：146 条语句中 29 条解析失败，修正 `<where>` / `<set>` 展平后降到 18 条）
 - 一致性对比中的耗时是**同机同数据的指示性对比**，不是 benchmark；两个引擎的优化器与默认存储都不同
 - `FLOAT` / `REAL` 按 10 位有效数字比较：避开二进制表示噪声，代价是更小的真实差异看不出来
 - 用例集需自带可移植的建表与造数脚本，暂不支持从生产库采样

@@ -76,6 +76,10 @@ public final class MyBatisXmlParser {
 
     /**
      * 把元素展平成纯 SQL 文本：丢掉子标签、保留其文本，同时把需要跟踪的标签名收进 {@code dynamicTags}。
+     *
+     * <p><b>两个标签不能只丢不管</b>：{@code <where>} 与 {@code <set>} 自带关键字生成职责，
+     * 丢了标签就等于丢了 {@code WHERE} / {@code SET}，展平后直接不是合法 SQL。
+     * 同时 MyBatis 会擦掉 {@code <where>} 开头的 AND/OR、{@code <set>} 末尾的多余逗号，这里一并模拟。
      */
     private String flatten(Node node, Set<String> dynamicTags) {
         StringBuilder sb = new StringBuilder();
@@ -89,10 +93,27 @@ public final class MyBatisXmlParser {
                 if (TRACKED_TAGS.contains(tagName)) {
                     dynamicTags.add(tagName);
                 }
-                sb.append(' ').append(flatten(child, dynamicTags)).append(' ');
+                String inner = flatten(child, dynamicTags);
+                switch (tagName) {
+                    case "where" -> sb.append(' ').append(renderWhere(inner)).append(' ');
+                    case "set" -> sb.append(' ').append(renderSet(inner)).append(' ');
+                    default -> sb.append(' ').append(inner).append(' ');
+                }
             }
         }
         return sb.toString().replaceAll("\\s+", " ").trim();
+    }
+
+    /** {@code <where>}：生成 WHERE，并抹掉内层开头的 AND / OR（MyBatis 就是这么干的）。 */
+    private String renderWhere(String inner) {
+        String body = inner.strip().replaceFirst("(?i)^(and|or)\\s+", "");
+        return body.isEmpty() ? "" : "WHERE " + body;
+    }
+
+    /** {@code <set>}：生成 SET，并抹掉末尾多余逗号。 */
+    private String renderSet(String inner) {
+        String body = inner.strip().replaceFirst(",+$", "");
+        return body.isEmpty() ? "" : "SET " + body;
     }
 
     /**

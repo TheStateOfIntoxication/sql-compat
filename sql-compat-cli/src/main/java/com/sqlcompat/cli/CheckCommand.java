@@ -8,6 +8,7 @@ import com.sqlcompat.core.model.Severity;
 import com.sqlcompat.core.report.HtmlReportRenderer;
 import com.sqlcompat.core.report.MarkdownReportRenderer;
 import com.sqlcompat.core.report.ReportRenderer;
+import com.sqlcompat.core.rule.RuleRegistry;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
@@ -17,6 +18,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 /**
@@ -45,6 +47,10 @@ public final class CheckCommand implements Callable<Integer> {
                     + "BLOCKER | MAJOR | MINOR | INFO。默认：不因问题而失败。")
     Severity failOn;
 
+    @Option(names = {"--ignore"}, split = ",",
+            description = "忽略指定规则编号，逗号分隔，例如 R011 或 PARSE。用于把报告收敛到关心的范围。")
+    List<String> ignore;
+
     @Option(names = {"--fix"},
             description = "自动执行等价改写（R001 IFNULL / R004 分页 / R016 <=>），"
                     + "结果写到 --fix-out 指定的目录，不改源文件。")
@@ -69,7 +75,9 @@ public final class CheckCommand implements Callable<Integer> {
                 ? new MarkdownReportRenderer()
                 : new HtmlReportRenderer();
 
-        CompatEngine engine = new CompatEngine();
+        CompatEngine engine = new CompatEngine(
+                RuleRegistry.defaults().excluding(ignore),
+                ignore == null ? Set.of() : Set.copyOf(ignore));
         Report before = engine.scan(input, "MySQL", "Kingbase/PostgreSQL");
 
         Report reported = before;
@@ -103,7 +111,7 @@ public final class CheckCommand implements Callable<Integer> {
     private Report applyFix(CompatEngine engine, FixMode mode, Report before) throws Exception {
         Path targetDir = inPlace ? input : (fixOut != null ? fixOut : Path.of("sql-compat-fixed"));
         List<AutoFixer.FixResult> results = new AutoFixer(
-                com.sqlcompat.core.rule.RuleRegistry.defaults(), mode).fixTree(input, targetDir);
+                RuleRegistry.defaults(), mode).fixTree(input, targetDir);
 
         List<String> appliedRules = new ArrayList<>();
         int changedFiles = 0;
