@@ -23,8 +23,25 @@
 |---|---|---|---|
 | R010 | `ctid` 行标识提示 | **`LIMIT` 无 `ORDER BY` → 行序未定义** | 原设想是 INFO 级知识提示，不是"问题"；换成"分页无排序"这个真实存在、不报错但结果会变的坑 |
 | R016 | 隐式类型转换 | **`<=>` → `IS NOT DISTINCT FROM`** | 隐式转换需要列类型信息，无 schema 无法判断；`<=>` 是确定性的语法差异 |
-| R017 | NULL 排序 | **`ORDER BY DESC` + `LIMIT` 时的 NULL 位置** | 单独看 `ORDER BY` 无法判断 NULL 是否真的影响结果；叠加 `LIMIT` 才构成"翻页翻错"的实际风险，误报也大幅下降 |
+| R017 | NULL 排序 | **`ORDER BY DESC` + `LIMIT` 时的 NULL 位置** | 单独看 `ORDER BY` 无法判断 NULL 是否真的影响结果；叠加 `LIMIT` 才构成“翻页翻错”的实际风险，误报也大幅下降 |
 | R020 | 子查询 `LIMIT` | **`DATE_ADD` / `DATE_SUB` / `STR_TO_DATE` / `UNIX_TIMESTAMP`** | 现代 PG 对子查询 `LIMIT` 已无限制，原规则基本不成立；日期函数是迁移里最高频的残留 |
+
+### R017 的 `LIMIT` 限制后来被自己的用例证伪了一半
+
+上面 R017 那条的理由写的是“没被截断的结果里这个差异并不构成实际问题”。
+这句话在 v0.3 的运行时对比里被自己推翻了一半：
+
+| 用例 | 语句 | 静态层 | 运行时 |
+|---|---|---|---|
+| `07_distinct_owners` | `SELECT DISTINCT owner_id ... ORDER BY owner_id`（ASC，无 `LIMIT`） | 0 问题 | **DIFFERENT**，第一行 `NULL` vs `1` |
+| `92_known_order_null_desc` | `ORDER BY owner_id DESC, id ASC`（DESC，无 `LIMIT`） | 0 问题 | **DIFFERENT**，第一行 `id=13` vs `id=14` |
+
+即使不翻页，两库返回的**顺序不同**也是实实在在的差异：取 `list.get(0)`、做下拉框默认值、
+按顺序写文件、拿两边结果集 diff，全都会中招。
+
+但放宽到“所有可空列的 `ORDER BY`”又不现实——没有 schema 就不知道列可不可空，
+对每条 `ORDER BY` 都报会让报告彻底变成噪音。所以当前维持 `LIMIT` 门槛，
+把盲区写进 [`known-limitations.md`](known-limitations.md)，并靠第二层兼底。
 
 ---
 

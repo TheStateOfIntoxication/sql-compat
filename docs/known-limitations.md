@@ -59,6 +59,20 @@
 | R011 `<foreach>` | 只要语句含 `<foreach>` 就报，不看集合大小 | 这是"请复核"标记，不是缺陷判定；foreach 密集的项目会显得很吵，用 `--ignore R011` 过滤 |
 | R012 `REGEXP` | 无法判断原语句是否依赖 MySQL 的默认不区分大小写 | 已在 `docs/manual-decisions.md` 里列为必查项 |
 | R016 `<=>` | XML 里写作 `&lt;=&gt;`，两者都认 | 不认转义形式的话，对真实 Mapper 是瞎的 |
+| R017 NULL 排序 | **无 `LIMIT` 的 `ORDER BY` 一律不报**，即使运行时已证实两库顺序不同 | 没有 schema 就不知道列可不可空；对每条 `ORDER BY` 都报会让报告变噪音。代价是这个盲区只能靠第二层兼底 |
+
+### R017 盲区的实测证据
+
+v0.3 的运行时对比里有两条静态层报 0 问题、但两库结果确实不同的语句：
+
+| 用例 | 语句 | MySQL 第一行 | PostgreSQL 第一行 |
+|---|---|---|---|
+| `07_distinct_owners` | `SELECT DISTINCT owner_id FROM demo_asset ORDER BY owner_id` | `NULL` | `1` |
+| `92_known_order_null_desc` | `SELECT id, owner_id FROM demo_asset ORDER BY owner_id DESC, id ASC` | `id=13` | `id=14` |
+
+原因就是 MySQL 认为 NULL 最小、PostgreSQL 认为 NULL 最大（`DISTINCT` 不影响这一点）。
+两条都没有 `LIMIT`，因此 R017 不触发。**不翻页不代表没影响**：取 `list.get(0)`、
+做下拉框默认值、按顺序写文件、拿两边结果集 diff，都会因此对不上。
 
 ## 四、双库对比（第二层）
 

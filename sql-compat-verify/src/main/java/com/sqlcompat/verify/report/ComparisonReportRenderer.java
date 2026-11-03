@@ -32,7 +32,9 @@ public final class ComparisonReportRenderer {
         appendDifferences(sb, report);
         appendAllCases(sb, report);
 
-        sb.append("\n> 耗时是预热后若干轮的中位数，同机同数据测得。它是两个引擎之间的**指示性对比**，\n")
+        sb.append("\n> 不一致不等于缺陷：用例可能是故意构造的方言差异（文件名带 known_），")
+                .append("也可能是真发现。判断依据要逐条读上面的差异明细。\n");
+        sb.append("> 耗时是预热后若干轮的中位数，同机同数据测得。它是两个引擎之间的**指示性对比**，\n")
                 .append("> 不是 benchmark。\n");
         return sb.toString();
     }
