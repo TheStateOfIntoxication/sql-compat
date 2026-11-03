@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  插件冒烟测试用的宿主工程，不参与主 reactor 构建（放在 src/it 下）。
+  由 CI 复制到临时目录后执行 `mvn verify`，验证两件事：
+  1. 插件的 check goal 真的会跑
+  2. mapper 目录里的 logback.xml 不会被误当成 mapper
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>io.github.sqlcompat.it</groupId>
+  <artifactId>it-host</artifactId>
+  <version>1.0.0</version>
+  <packaging>jar</packaging>
+
+  <properties>
+    <maven.compiler.release>25</maven.compiler.release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>io.github.sqlcompat</groupId>
+        <artifactId>sql-compat-maven-plugin</artifactId>
+        <version>@project.version@</version>
+        <configuration>
+          <input>${project.basedir}/src/main/resources</input>
+          <format>md</format>
+          <ignore>R011,PARSE</ignore>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

@@ -1,0 +1,4 @@
+<configuration>
+    <!-- 这个文件不是 mapper。插件必须自己认出来并跳过，否则解析会抛异常、把构建搞红。 -->
+    <appender name="CONSOLE"/>
+</configuration>

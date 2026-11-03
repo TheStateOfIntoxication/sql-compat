@@ -9,9 +9,9 @@
 
 | 项 | 结果 |
 |---|---|
-| 模块 | 4（core / verify / cli / samples） |
+| 模块 | 5（core / verify / cli / maven-plugin / samples） |
 | `mvn clean verify` | **BUILD SUCCESS** |
-| 单元测试 | **93 个全绿**（core 93 · verify 17，其中 5 个集成测试在无库环境自动跳过） |
+| 单元测试 | **120 个全绿**（core 98 · verify 17 · maven-plugin 8，其中 5 个集成测试在无库环境自动跳过） |
 | 行覆盖率（core） | **93.9%** |
 | 分支覆盖率（core） | **78.9%** |
 | 零覆盖类 | **0** |
@@ -156,6 +156,7 @@ kingbase 侧共 14 处反引号标识符（如 lsm.`number`）
 | `sql-compat-core` | 20 条规则 · 规则引擎 · MyBatis 解析 · JSQLParser 封装 · HTML/MD 渲染 · 自动改写 |
 | `sql-compat-verify` | 双库一致性对比 · 值归一化 · 结果集 diff · 一致性报告 |
 | `sql-compat-cli` | `check` / `verify` 两个子命令，picocli + shade 单 jar |
+| `sql-compat-maven-plugin` | `mvn sql-compat:check`，挂到 verify 阶段；自带 IT 宿主工程 |
 | `sql-compat-samples` | 虚构 schema 的 fixture，能触发全部 20 条规则 |
 
 **文档（5 份，各有明确读者）**
@@ -168,7 +169,7 @@ kingbase 侧共 14 处反引号标识符（如 lsm.`number`）
 | `docs/manual-decisions.md` | 真要做迁移的人 | 哪些必须人拍板、找谁拍板 |
 | `docs/known-limitations.md` | 踩到边界的用户 | 什么跑不了、为什么、怎么绕 |
 
-**CI**：`build`（含 JaCoCo）· `static scan` · `consistency`（双库 service 容器）
+**CI**：`build`（含 JaCoCo）· `static scan` · `maven-plugin-smoke`（真装真跑）· `consistency`（双库 service 容器）
 
 ---
 

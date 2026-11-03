@@ -6,13 +6,14 @@
 
 ```
 sql-compat-parent
-├── sql-compat-core      规则引擎 + 解析器 + 报告渲染（纯库，无 CLI / 无框架）
-├── sql-compat-verify    双库一致性对比（JDBC，运行时）
-├── sql-compat-cli       picocli 入口，负责参数解析与文件写出
-└── sql-compat-samples   演示用 fixture（虚构 schema，无任何真实表结构）
+├── sql-compat-core          规则引擎 + 解析器 + 报告渲染（纯库，无 CLI / 无框架）
+├── sql-compat-verify        双库一致性对比（JDBC，运行时）
+├── sql-compat-cli           picocli 入口，负责参数解析与文件写出
+├── sql-compat-maven-plugin  Maven 插件，把 check 挂到 verify 阶段
+└── sql-compat-samples       演示用 fixture（虚构 schema，无任何真实表结构）
 ```
 
-依赖方向严格单向：`cli → core`、`cli → verify`；`core` 与 `verify` 互不依赖，也都不依赖任何 DI 容器。
+依赖方向严格单向：`cli → core/verify`、`maven-plugin → core`；`core` 与 `verify` 互不依赖，也都不依赖任何 DI 容器。
 
 ## 核心类型（第一层）
 
@@ -130,3 +131,16 @@ cases/*.sql  ──► CaseLoader ──► SqlCase(id, sql, ordered)
 | 运行时层 | `DualDbComparisonIT` 需要两个活库，未设环境变量时整类跳过 |
 
 覆盖率由 JaCoCo 在 `verify` 阶段产出，排除第三方包（`net/sf/jsqlparser/**`）—— 那不是我们该负责的代码。
+### 8. Maven 插件要"能无痛加"，所以要会自己认输
+
+插件形态最容易犯的错是：一加进 pom，构建就红。比如把 `src/main/resources` 下的 `logback.xml`
+当 mapper 解析，或者在没有 mapper 的模块上也执行扫描报错。
+
+所以插件做了两个前置判断：
+
+| 判断 | 理由 |
+|---|---|
+| 前 4KB 不含 `<mapper` 的 XML 直接排除 | 否则 `logback.xml` / `mybatis-config.xml` 会让整个构建抛异常 |
+| 扫描到 0 条语句时跳过并返回成功 | 插件要能加到任意模块上，没有 mapper 不该算失败 |
+
+另外**默认不改源文件、默认不失败**：不配 `failOn` 就只出报告，让人先看一版再决定要不要卡口。

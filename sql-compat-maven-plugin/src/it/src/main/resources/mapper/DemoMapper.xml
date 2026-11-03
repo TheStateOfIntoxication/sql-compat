@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 冒烟工程用的 mapper：故意留几处 MySQL 专有写法，确保插件能报出问题 -->
+<mapper namespace="it.mapper.DemoMapper">
+
+    <select id="byId" resultType="map">
+        SELECT IFNULL(a.owner_name, 'x') AS owner_name
+        FROM demo_asset a
+        WHERE a.id = #{id}
+    </select>
+
+    <select id="paged" resultType="map">
+        SELECT a.id FROM demo_asset a ORDER BY a.id LIMIT 10, 20
+    </select>
+
+    <select id="portable" resultType="map">
+        SELECT a.id, COALESCE(a.owner_name, 'x') AS owner_name
+        FROM demo_asset a
+        WHERE a.status = #{status}
+        ORDER BY a.id
+        LIMIT 20
+    </select>
+
+</mapper>

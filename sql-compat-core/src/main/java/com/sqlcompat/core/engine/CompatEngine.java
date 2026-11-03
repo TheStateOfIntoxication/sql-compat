@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
@@ -54,8 +55,16 @@ public final class CompatEngine {
     }
 
     public Report scan(Path input, String sourceDialect, String targetDialect) throws IOException {
+        return scan(input, sourceDialect, targetDialect, path -> true);
+    }
+
+    /**
+     * @param fileFilter 额外的文件过滤（如按 include 通配符、或排除非 mapper 的 XML）
+     */
+    public Report scan(Path input, String sourceDialect, String targetDialect,
+                       Predicate<Path> fileFilter) throws IOException {
         Instant started = Instant.now();
-        List<SqlStatement> statements = collectStatements(input);
+        List<SqlStatement> statements = collectStatements(input, fileFilter);
         List<ScanResult> results = new ArrayList<>();
         for (SqlStatement statement : statements) {
             SqlParserFacade.ParseOutcome outcome = sqlParser.parse(statement.sqlText());
@@ -94,17 +103,29 @@ public final class CompatEngine {
 
     /** 从 Mapper XML、{@code .sql} 文件或目录中采集语句。 */
     public List<SqlStatement> collectStatements(Path input) throws IOException {
+        return collectStatements(input, path -> true);
+    }
+
+    /**
+     * 从 Mapper XML、{@code .sql} 文件或目录中采集语句。
+     *
+     * @param fileFilter 在扩展名过滤之后应用的额外条件
+     */
+    public List<SqlStatement> collectStatements(Path input, Predicate<Path> fileFilter) throws IOException {
         List<Path> files = new ArrayList<>();
         if (Files.isDirectory(input)) {
             try (Stream<Path> walk = Files.walk(input)) {
                 walk.filter(Files::isRegularFile)
                         .filter(p -> isMapperXml(p) || isSqlFile(p))
+                        .filter(fileFilter)
                         // 排序是为了一次扫描的产出稳定，CI 里才能 diff 报告。
                         .sorted(Comparator.comparing(Path::toString))
                         .forEach(files::add);
             }
         } else if (Files.isRegularFile(input)) {
-            files.add(input);
+            if (fileFilter.test(input)) {
+                files.add(input);
+            }
         } else {
             throw new IOException("输入路径不存在：" + input);
         }

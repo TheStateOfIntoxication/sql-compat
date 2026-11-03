@@ -25,6 +25,7 @@
     <module>sql-compat-core</module>
     <module>sql-compat-verify</module>
     <module>sql-compat-cli</module>
+    <module>sql-compat-maven-plugin</module>
     <module>sql-compat-samples</module>
   </modules>
 
@@ -39,6 +40,8 @@
     <assertj.version>3.27.7</assertj.version>
     <mysql-driver.version>9.7.0</mysql-driver.version>
     <postgresql-driver.version>42.7.14</postgresql-driver.version>
+    <maven-plugin-api.version>3.9.16</maven-plugin-api.version>
+    <maven-plugin-tools.version>3.15.2</maven-plugin-tools.version>
 
     <maven-compiler-plugin.version>3.14.1</maven-compiler-plugin.version>
     <maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
@@ -57,6 +60,21 @@
         <groupId>io.github.sqlcompat</groupId>
         <artifactId>sql-compat-verify</artifactId>
         <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.maven</groupId>
+        <artifactId>maven-plugin-api</artifactId>
+        <version>${maven-plugin-api.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.maven</groupId>
+        <artifactId>maven-core</artifactId>
+        <version>${maven-plugin-api.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.maven.plugin-tools</groupId>
+        <artifactId>maven-plugin-annotations</artifactId>
+        <version>${maven-plugin-tools.version}</version>
       </dependency>
       <dependency>
         <groupId>com.mysql</groupId>
@@ -116,6 +134,11 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-shade-plugin</artifactId>
           <version>${maven-shade-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-plugin-plugin</artifactId>
+          <version>${maven-plugin-tools.version}</version>
         </plugin>
         <plugin>
           <groupId>org.jacoco</groupId>
