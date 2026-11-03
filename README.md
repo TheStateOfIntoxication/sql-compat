@@ -208,6 +208,9 @@ public final class InsertIgnoreRule implements DialectRule {
 ## 局限与路线图
 
 **局限（如实写）**
+- 工具只能改**语法形状**，改不了**业务语义**。哪些必须人工拍板，逐条列在 [docs/manual-decisions.md](docs/manual-decisions.md)：
+  6 条完全不能自动改（`LIMIT` 删除、`INSERT IGNORE`、upsert、`AUTO_INCREMENT`、`REPLACE INTO`、`ON UPDATE`），
+  12 条能改但残留一个决策点（如 `REGEXP` 的大小写敏感默认值相反、`GROUP_CONCAT` 的 1024 截断在 PG 不存在）
 - Kingbase 用 **PostgreSQL 16** 做近似验证：Kingbase 基于 PG，方言高度一致，但**不是** 1:1 实测
 - 分页/批量/DML 类规则靠 AST + 正则，MyBatis 动态 SQL 采用"展平"策略，极端嵌套场景可能漏判
 - 规则只覆盖高频场景，不做完整方言矩阵
