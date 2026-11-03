@@ -38,9 +38,25 @@ public final class SqlParserFacade {
      *
      * <p>剥 BEGIN/END 是安全的：AST 只用于分析、不用于回写。而 Oracle 风格的匿名块
      * JSQLParser 根本不认 —— 与其整句丢掉，不如把它里面的 DML 解析出来。
+     *
+     * <p><b>相邻的多个拼接占位符要合成一个</b>：{@code ORDER BY ${col} ${sort}} 这类写法
+     * 把两个 {@code ${}} 都换成标识符会得到 {@code ORDER BY t t}，直接不是合法 SQL。
+     * 这是从真实项目审计出来的：一个项目里 3 条“分页 + 动态排序”语句因此全部解析失败。
      */
     private String sanitize(String sql) {
-        String text = sql.replaceAll("#\\{[^}]*}", "?")
+        String text = sql
+                // 动态排序：ORDER BY 后面接多少个拼接占位符都直接换成常量列。
+                // 形态一：ORDER BY ${col} ${sort}；形态二：ORDER BY "${col}" ${sort}
+                // 不换的话会得到 ORDER BY t t —— 两个标识符相邻，不是合法 SQL。
+                .replaceAll("(?i)(order\\s+by)\\s+(?:(?:\"\\s*\\$\\{[^}]*}\\s*\"|\\$\\{[^}]*})\\s*)+", "$1 1")
+                // ORDER BY <表达式> ${sort} 里的 ${sort} 是排序方向，换成标识符会变成
+                // ORDER BY INET_ATON(ip) t —— 函数调用后面跟标识符，也不是合法 SQL。
+                .replaceAll("(?i)(order\\s+by\\s+[;\\n]*?\\S+?)\\s+\\$\\{[^}]*}\\s*(?=lim\\w*\\b|\\)|$|;)", "$1 ASC")
+                // 包在双引号里的拼接占位符（其它位置），避免变成 "t"
+                .replaceAll("\"[^\"]*\\$\\{[^}]*}[^\"]*\"", "t")
+                // 相邻（中间只有空白）的多个 ${}，整体折叠成一个标识符
+                .replaceAll("(?:\\$\\{[^}]*\\}\\s*){2,}", "t ")
+                .replaceAll("#\\{[^}]*}", "?")
                 .replaceAll("\\$\\{[^}]*}", "t");
         String stripped = text.strip();
         if (stripped.regionMatches(true, 0, "begin", 0, 5)

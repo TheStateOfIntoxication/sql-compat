@@ -97,6 +97,7 @@ public final class MyBatisXmlParser {
                 switch (tagName) {
                     case "where" -> sb.append(' ').append(renderWhere(inner)).append(' ');
                     case "set" -> sb.append(' ').append(renderSet(inner)).append(' ');
+                    case "choose" -> sb.append(' ').append(renderChooseFirstBranch(child, dynamicTags)).append(' ');
                     default -> sb.append(' ').append(inner).append(' ');
                 }
             }
@@ -114,6 +115,25 @@ public final class MyBatisXmlParser {
     private String renderSet(String inner) {
         String body = inner.strip().replaceFirst(",+$", "");
         return body.isEmpty() ? "" : "SET " + body;
+    }
+
+    /**
+     * {@code <choose>}：运行期只会走其中**一个**分支，所以展平时也只能取一个。
+     *
+     * <p>早期版本把 when / otherwise 全部拼在一起，结果一条语句里出现两个
+     * {@code ORDER BY}，必然解析失败 —— 这是真实项目上暴露的。
+     * 静态检查不需要穷举所有分支，取第一个分支（优先 {@code <when>}）即可。
+     */
+    private String renderChooseFirstBranch(Node choose, Set<String> dynamicTags) {
+        NodeList children = choose.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            Node child = children.item(i);
+            if (child.getNodeType() != Node.ELEMENT_NODE) {
+                continue;
+            }
+            return flatten(child, dynamicTags);
+        }
+        return "";
     }
 
     /**

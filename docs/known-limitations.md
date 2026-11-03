@@ -15,6 +15,7 @@
 | Oracle `CONNECT BY ROOT(...)` / `LEVEL` 层次查询 | `unexpected token: "CONNECT_BY_ROOT"` | JSQLParser 不支持 Oracle 层次查询 | 同上。这类语句迁移到 PG 本来就要用 `WITH RECURSIVE` 重写，属于 A 类人工项 |
 | 一个 `<update>` 里拼了多条语句（`UPDATE ...; SELECT 1 FROM DUAL`） | `unexpected token: "SELECT"` | 输入本身不干净：MyBatis 单语句不支持多句 | 拆成两个 `<select>` / `<update>`；Oracle 侧要靠 `allowMultiQueries` |
 | 双引号标识符作表别名（`FROM "app_x" t ...` 的个别写法） | `unexpected token: "t"` | JSQLParser 对某些引号组合的别名解析失败 | 影响极小，单条级别 |
+| MySQL 8 `JSON_TABLE(... COLUMNS(...))` 表函数 | `unexpected token: "in"` | JSQLParser 不支持表函数 | 文本规则仍生效 |
 
 **当前 20 条规则没有一条依赖 AST。** `RuleContext.ast()` 是给后续规则预留的扩展点
 （见路线图 v0.6 的 AST 类规则）。所以上面的解析失败**不会造成漏检** —— 但工具会把这些语句
@@ -32,6 +33,13 @@
 
 > 这两个 bug 是在真实项目上跑出来的：29 条解析失败里有 13 条是它们导致的。
 > 修正后降到 18 条。教训是——**展平不是"删标签"，是"模拟标签的语义"**。
+
+**`<choose>` 只能取一个分支**：运行期只走 `when` / `otherwise` 其中一个，全拼进来会让一条语句出现两个
+`ORDER BY`。现在只展平第一个分支。
+
+**动态排序的 `${}` 要做特殊处理**：`ORDER BY ${col} ${sort}`、`ORDER BY "${col}" ${sort}`、
+`ORDER BY INET_ATON(ip) ${sort}` 这三种写法，逐个替换占位符会得到 `ORDER BY t t` / `ORDER BY f(x) t`
+这类非法 SQL。现在分别折叠成 `ORDER BY 1` 与 `ORDER BY f(x) ASC`。
 
 其余已知局限：
 

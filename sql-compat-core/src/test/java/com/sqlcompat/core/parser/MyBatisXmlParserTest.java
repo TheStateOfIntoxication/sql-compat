@@ -100,4 +100,41 @@ class MyBatisXmlParserTest {
         assertThat(statements.getFirst().dynamicTags()).contains("foreach");
         assertThat(statements.getFirst().hasDynamicTag("FOREACH")).isTrue();
     }
-}
+
+    @Test
+    @DisplayName("<choose> 只取一个分支，不能把 when 与 otherwise 拼在一起")
+    void chooseTakesOnlyOneBranch() throws IOException {
+        List<SqlStatement> statements = parse("""
+                <mapper namespace="demo">
+                    <select id="paged">
+                        SELECT a.id FROM demo_asset a
+                        <choose>
+                            <when test="col != null">ORDER BY ${col} ${sort}</when>
+                            <otherwise>ORDER BY a.id DESC</otherwise>
+                        </choose>
+                    </select>
+                </mapper>
+                """);
+
+        String sql = statements.getFirst().sqlText();
+        assertThat(sql).contains("ORDER BY ${col} ${sort}");
+        assertThat(sql).as("两个分支都拼进来会出现两个 ORDER BY").doesNotContain("ORDER BY a.id DESC");
+        assertThat(statements.getFirst().hasDynamicTag("choose")).isTrue();
+    }
+
+    @Test
+    @DisplayName("相邻的多个 ${} 折叠成一个标识符，否则 ORDER BY t t 不是合法 SQL")
+    void adjacentSubstitutionsAreCollapsed() {
+        SqlParserFacade facade = new SqlParserFacade();
+
+        assertThat(facade.parse("SELECT a.id FROM demo_asset a ORDER BY ${col} ${sort}").ok())
+                .as("ORDER BY ${col} ${sort} 必须能被解析")
+                .isTrue();
+        assertThat(facade.parse("SELECT a.id FROM demo_asset a WHERE a.name = ${name}").ok())
+                .isTrue();
+        assertThat(facade.parse("SELECT a.id FROM demo_asset a ORDER BY ${a} ${b} ${c}").ok())
+                .isTrue();
+        assertThat(facade.parse("SELECT a.id FROM demo_asset a ORDER BY \"${col}\" ${sort}").ok())
+                .as("双引号包住的拼接占位符也要能解析")
+                .isTrue();
+    }}
