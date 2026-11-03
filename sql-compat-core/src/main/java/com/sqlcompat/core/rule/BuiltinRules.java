@@ -3,6 +3,7 @@ package com.sqlcompat.core.rule;
 import com.sqlcompat.core.rule.builtin.AutoIncrementRule;
 import com.sqlcompat.core.rule.builtin.BacktickQuoteRule;
 import com.sqlcompat.core.rule.builtin.DateFormatRule;
+import com.sqlcompat.core.rule.builtin.DateFunctionRule;
 import com.sqlcompat.core.rule.builtin.DeleteUpdateLimitRule;
 import com.sqlcompat.core.rule.builtin.ForeachBindingRule;
 import com.sqlcompat.core.rule.builtin.GroupConcatRule;
@@ -10,6 +11,9 @@ import com.sqlcompat.core.rule.builtin.IfnullRule;
 import com.sqlcompat.core.rule.builtin.IndexPrefixLengthRule;
 import com.sqlcompat.core.rule.builtin.InsertIgnoreRule;
 import com.sqlcompat.core.rule.builtin.JsonExtractRule;
+import com.sqlcompat.core.rule.builtin.LimitWithoutOrderByRule;
+import com.sqlcompat.core.rule.builtin.NullOrderingRule;
+import com.sqlcompat.core.rule.builtin.NullSafeEqualsRule;
 import com.sqlcompat.core.rule.builtin.OnUpdateTimestampRule;
 import com.sqlcompat.core.rule.builtin.PagingSyntaxRule;
 import com.sqlcompat.core.rule.builtin.RegexpOperatorRule;
@@ -51,7 +55,12 @@ final class BuiltinRules {
                 new ForeachBindingRule(),
                 new TinyIntBooleanRule(),
                 new OnUpdateTimestampRule(),
-                new IndexPrefixLengthRule()
+                new IndexPrefixLengthRule(),
+                // batch 4 - semantics
+                new LimitWithoutOrderByRule(),
+                new NullSafeEqualsRule(),
+                new NullOrderingRule(),
+                new DateFunctionRule()
         );
     }
 }

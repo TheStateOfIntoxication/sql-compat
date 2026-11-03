@@ -90,8 +90,8 @@ public final class CompatEngine {
         List<SqlStatement> result = new ArrayList<>();
         String[] parts = content.split(";");
         for (int i = 0; i < parts.length; i++) {
-            String sql = parts[i].strip();
-            if (sql.isEmpty() || sql.startsWith("--")) {
+            String sql = stripLineComments(parts[i]).strip();
+            if (sql.isEmpty()) {
                 continue;
             }
             result.add(new SqlStatement(
@@ -101,6 +101,24 @@ public final class CompatEngine {
                     com.sqlcompat.core.model.SourceLocation.of(file.getFileName().toString(), i + 1)));
         }
         return result;
+    }
+
+    /**
+     * Drops {@code --} line comments from a statement chunk.
+     *
+     * <p>Earlier versions skipped a chunk outright when it started with a comment, which silently
+     * dropped any statement that had a comment above it — the DDL fixtures made that obvious.
+     * Known limitation: a line whose literal value starts with {@code --} is dropped as well.
+     */
+    private String stripLineComments(String chunk) {
+        StringBuilder sb = new StringBuilder(chunk.length());
+        for (String line : chunk.split("\\R")) {
+            if (line.stripLeading().startsWith("--")) {
+                continue;
+            }
+            sb.append(line).append('\n');
+        }
+        return sb.toString();
     }
 
     private boolean isMapperXml(Path path) {
