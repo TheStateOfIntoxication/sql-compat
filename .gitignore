@@ -1,0 +1,42 @@
+# ---- Build output ----
+target/
+build/
+out/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+
+# ---- IDE ----
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.project
+.classpath
+.factorypath
+
+# ---- OS ----
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# ---- Secrets: never commit these ----
+.env
+.env.*
+!.env.example
+*.local.yml
+*.local.yaml
+application-local.properties
+*.pem
+*.p12
+*.jks
+
+# ---- Local artifacts ----
+demo-report.html
+demo-report.md
+sql-compat-report.html
+sql-compat-report.md
+logs/
+*.log

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  Fixture mapper. Contains deliberately MySQL-only syntax so the demo report is not empty.
+  The schema is invented; it has nothing to do with any real project.
+-->
+<mapper namespace="demo.mapper.AssetMapper">
+
+    <select id="selectAssetById" resultType="map">
+        SELECT
+            a.id,
+            a.asset_name,
+            IFNULL(a.owner_name, 'unknown') AS owner_name,
+            DATE_FORMAT(a.created_at, '%Y-%m-%d %H:%i:%s') AS created_text
+        FROM demo_asset a
+        WHERE a.id = #{id}
+    </select>
+
+    <select id="selectRecentAssets" resultType="map">
+        SELECT a.id, a.asset_name, a.created_at
+        FROM demo_asset a
+        WHERE a.status = #{status}
+        ORDER BY a.created_at DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="selectAssetsByOwners" resultType="map">
+        SELECT a.id, a.asset_name
+        FROM demo_asset a
+        WHERE a.status = 1
+        <if test="ownerIds != null and ownerIds.size() > 0">
+            AND a.owner_id IN
+            <foreach collection="ownerIds" item="ownerId" open="(" separator="," close=")">
+                #{ownerId}
+            </foreach>
+        </if>
+        AND a.tenant_code = #{tenantCode}
+    </select>
+
+    <select id="selectMonthlyUsage" resultType="map">
+        SELECT DATE_FORMAT(u.used_at, '%Y-%m') AS month_key, COUNT(1) AS total
+        FROM demo_usage u
+        WHERE u.used_at &gt;= #{from}
+        GROUP BY DATE_FORMAT(u.used_at, '%Y-%m')
+    </select>
+
+    <update id="touchAssets">
+        UPDATE demo_asset
+        SET updated_at = NOW()
+        WHERE status = 0
+        LIMIT 500
+    </update>
+
+    <delete id="purgeStaleAssets">
+        DELETE FROM demo_asset
+        WHERE created_at &lt; #{threshold}
+        LIMIT 1000
+    </delete>
+
+    <insert id="batchInsertAsset">
+        INSERT IGNORE INTO demo_asset (id, asset_name, owner_id, created_at)
+        VALUES
+        <foreach collection="items" item="item" separator=",">
+            (#{item.id}, #{item.assetName}, #{item.ownerId}, NOW())
+        </foreach>
+    </insert>
+
+    <insert id="upsertAsset">
+        INSERT INTO demo_asset (id, asset_name, owner_id, created_at)
+        VALUES (#{id}, #{assetName}, #{ownerId}, NOW())
+        ON DUPLICATE KEY UPDATE asset_name = VALUES(asset_name)
+    </insert>
+
+    <select id="selectPortableAssets" resultType="map">
+        SELECT a.id, COALESCE(a.owner_name, 'unknown') AS owner_name
+        FROM demo_asset a
+        WHERE a.status = #{status}
+          AND a.tenant_code = #{tenantCode}
+    </select>
+
+</mapper>
