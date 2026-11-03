@@ -22,13 +22,15 @@
 
 ---
 
-## 二、三个真实目标的扫描结果
+## 二、四个真实目标的扫描结果
 
 | 目标 | 语句数 | 问题 | blocker | major | minor | info | 解析失败 | 耗时 |
 |---|---|---|---|---|---|---|---|---|
 | ① 自带 samples | 25 | 50 | 19 | 22 | 9 | 0 | 0 | 186 ms |
 | ② cloud-workbench（真实） | 146 | 69 | **0** | **0** | 51 | 18 | 18（12%） | 544 ms |
 | ③ SSMS 三模块（真实） | 375 | 78 | **0** | **0** | 58 | 20 | 20（5%） | 1170 ms |
+| ④ 许可网关 mysql 侧（**MySQL 源库**） | 235 | 210 | **66** | 71 | 69 | 4 | 4（2%） | 770 ms |
+| ④ 许可网关 kingbase 侧（已适配） | 235 | 125 | **21** | 14 | 69 | 21 | 21（9%） | 1090 ms |
 
 **规则命中分布**
 
@@ -36,6 +38,63 @@
 - ② cloud-workbench：`R011 × 51` + `PARSE × 18`
 - ③ SSMS：`R011 × 56` + `R010 × 2` + `PARSE × 20`
 
+### ④ 许可网关（**MySQL 源库 · 双栈产物**）—— 最有说服力的一组
+
+这个项目的 `mapper/` 下同时存在 `mysql/` 与 `kingbase/` 两套 XML，天然构成一组**对照实验**：
+同一套业务语句，一套还没适配、一套已经适配。分开扫，结果如下：
+
+| 侧 | XML | 语句 | 问题 | blocker | major | minor | info | 解析失败 |
+|---|---|---|---|---|---|---|---|---|
+| `mysql/` | 31 | 235 | 210 | **66** | 71 | 69 | 4 | 4 |
+| `kingbase/` | 31 | 235 | 125 | **21** | 14 | 69 | 21 | 21 |
+
+#### 命中数与源码逐条吻合，零误报
+
+| 模式 | `mysql/` 实际出现 | `kingbase/` 实际出现 | 工具在 kingbase 侧报出 |
+|---|---|---|---|
+| `DATE_FORMAT` | 22 | 10 | R002 **×10** ✅ |
+| `IFNULL` | 12 | 1 | R001 **×1** ✅ |
+| `GROUP_CONCAT` | 6 | 4 | R008 **×4** ✅ |
+| `DATE_ADD / DATE_SUB / STR_TO_DATE / UNIX_TIMESTAMP` | 23 | 3 | R020 **×3** ✅ |
+| `ON DUPLICATE` | 1 | 1 | R006 **×1** ✅ |
+| 反引号 | 60（=30 对） | 28（=14 对） | R009 **×14** ✅ |
+
+**blocker 合计 21 = 1 + 10 + 4 + 3 + 1 + 2（R003），与上表逐项相加完全一致。**
+
+#### 这次扫描本身就是一次缺陷排查
+
+`kingbase/` 侧残留的 21 个 blocker 与 14 处反引号**是真实的未完成改造**，例如：
+
+```
+LsMapper.xml:619              DATE_FORMAT(mu.open_date, '%Y-%m-%d %H:%i:%s')
+LsMapper.xml:273              select DATE_FORMAT(`date`, '%Y-%m-%d') from holidays ...
+ApplicationBusinessTypeMapper.xml:10   GROUP_CONCAT(... SEPARATOR ',')
+LicenseServiceModuleMapper.xml:31      select IFNULL(max(...), 0) from ...
+kingbase 侧共 14 处反引号标识符（如 lsm.`number`）
+```
+
+对 kingbase 侧跑 `--fix-all` 预演（输出到临时目录，不动仓库）：
+
+```
+改写完成：8/31 个文件有变更，125 个问题 -> [R001, R002, R009] 规则生效
+重新扫描：问题 125 -> 100（减少 25）
+```
+
+改写结果示例：
+
+```diff
+- DATE_FORMAT(mu.open_date, '%Y-%m-%d %H:%i:%s') AS openDate,
++ TO_CHAR(mu.open_date, 'YYYY-MM-DD HH24:MI:SS') AS openDate,
+- select manage.name,lsm.`number` from
++ select manage.name,lsm."number" from
+```
+
+#### 结论
+
+- **66 个 blocker 在 `mysql/` 侧、0 个同类问题被漏到 `kingbase/` 侧的已适配部分** →
+  规则确实在区分"未适配"与"已适配"，不是无差别报错
+- **21 个 blocker 是真实的未完成项** → 工具的第一价值不是写进简历，是**真的能找出缺陷**
+- 这也补上了本报告原先缺的那块证据：**blocker > 0 的真实项目数字**
 ### 一个重要且诚实的观察
 
 两个真实项目的 **blocker 与 major 都是 0**，而 minor 几乎全是 R011（`<foreach>` 复核标记）。
@@ -117,8 +176,8 @@
 
 | # | 风险 | 影响 | 建议 |
 |---|---|---|---|
-| 1 | 真实项目上的 **blocker/major 命中数为 0** | 无法用它证明"真的抓到过问题" | 找一个 **MySQL 源库**的项目再跑一次；或在 samples 基础上扩一份"更接近真实 MySQL 项目"的语料 |
-| 2 | 「0 个 blocker」容易被误读成"检测很弱" | 影响可信度 | README 里明确写清工具的方向性（源库必须是 MySQL 系），本报告第二节已给出证据 |
+| ~~1~~ | ~~真实项目上的 blocker/major 命中数为 0~~ | ✅ **已解决** | 许可网关（MySQL 源库）实测 66 个 blocker；kingbase 侧残留 21 个，逐条与源码吻合 |
+| 2 | 「Oracle 源库项目 0 个 blocker」容易被误读成"检测很弱" | 影响可信度 | README 已加「方向性」一节：源库必须是 MySQL 系；本报告第二节给了两组对照数据 |
 | 3 | R011 在 foreach 密集项目里刷屏（51/146） | 报告可读性 | 已有 `--ignore R011`；可考虑按规则聚合统计（"R011 命中 51 条，展开查看"） |
 | 4 | 解析失败率 5%–12%，全部是解析器边界 | AST 类规则无法启用（目前 0 条依赖 AST，暂无实际影响） | v0.6 引入 AST 规则前，先评估这批语句的占比是否可接受 |
 | 5 | 双库一致性只在 CI 的 PG 16 上跑过，**Kingbase 未实测** | 信创场景的核心卖点打了折扣 | 找机会在真实 Kingbase 上跑一次 `verify`，数字会更有说服力 |
@@ -137,5 +196,8 @@
 | **对外可宣称的边界** | ⚠️ 只对 **MySQL 源库**成立；Kingbase 用 PG 16 近似验证 |
 | 面试可用性 | ✅ 有真实数字、有踩坑记录（`<where>`/`<set>` 展平、XML 转义 `<=>`、BOM）、有诚实的边界声明 |
 
-**可以推送。** 推之前建议只做一件事：找一个 MySQL 源库的项目跑一次，
-拿到「blocker > 0」的真实数字 —— 这是唯一还缺的证据。
+**可以推送。** 原先缺的那块证据（blocker > 0 的真实项目）已经用许可网关补上：
+`mysql/` 侧 66 个 blocker、`kingbase/` 侧 21 个残留 blocker，且命中数与源码逐条吻合、零误报。
+
+**下一步最该做的不是继续加功能，而是把 `kingbase/` 侧那 21 个 blocker 和 14 处反引号修掉** ——
+那是这个工具跑出来的第一批真实缺陷。
