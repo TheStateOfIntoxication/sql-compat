@@ -1,7 +1,7 @@
 package com.sqlcompat.core.util;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,6 +14,15 @@ import java.nio.file.Path;
  */
 public final class Io {
 
+    /**
+     * 单文件读取上限：8 MB。
+     *
+     * <p>Mapper XML 与 SQL 脚本都在几十 KB 量级，8 MB 已经留了两个数量级的余量。
+     * 设上限是为了让「喂错路径」变成一条明确报错，而不是把几百 MB 的二进制文件
+     * 读进堆里、在 OOM 堆栈里找原因。
+     */
+    private static final long MAX_READ_BYTES = 8L * 1024 * 1024;
+
     private Io() {
     }
 
@@ -23,7 +32,12 @@ public final class Io {
     }
 
     /** 按指定字符集读整个文件（保留原有调用点的显式字符集写法）。 */
-    public static String readString(Path path, java.nio.charset.Charset charset) throws IOException {
+    public static String readString(Path path, Charset charset) throws IOException {
+        long size = Files.size(path);
+        if (size > MAX_READ_BYTES) {
+            throw new IOException("文件过大，拒绝读取：" + path + "（" + size
+                    + " 字节，上限 " + MAX_READ_BYTES + " 字节）");
+        }
         return new String(Files.readAllBytes(path), charset);
     }
 
@@ -38,23 +52,7 @@ public final class Io {
     }
 
     /** 按指定字符集覆盖写，返回被写的路径。 */
-    public static Path writeString(Path path, CharSequence content, java.nio.charset.Charset charset)
-            throws IOException {
+    public static Path writeString(Path path, CharSequence content, Charset charset) throws IOException {
         return Files.write(path, content.toString().getBytes(charset));
-    }
-
-    /** 以 UTF-8 追加写。 */
-    public static void appendString(Path path, CharSequence content) throws IOException {
-        Files.write(path, content.toString().getBytes(StandardCharsets.UTF_8),
-                java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND);
-    }
-
-    /** 便于在 lambda 里调用：把受检的 {@link IOException} 包成非受检。 */
-    public static String readUnchecked(Path path) {
-        try {
-            return readString(path);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
     }
 }

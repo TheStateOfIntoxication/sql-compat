@@ -2,6 +2,8 @@ package com.sqlcompat.core.parser;
 
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.statement.Statement;
+
+import java.util.Objects;
 import java.util.Locale;
 
 /**
@@ -35,7 +37,38 @@ public final class SqlParserFacade {
         public boolean ok() {
             return ast != null;
         }
+
+        /** 值语义：由 record 降级来的，equals/hashCode 必须补齐，否则按值断言会静默失效。 */
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof ParseOutcome)) {
+                return false;
+            }
+            ParseOutcome that = (ParseOutcome) o;
+            return Objects.equals(ast, that.ast) && Objects.equals(error, that.error);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(ast, error);
+        }
+
+        @Override
+        public String toString() {
+            return ok() ? "ParseOutcome[ok]" : "ParseOutcome[error=" + error + "]";
+        }
     }
+
+    /**
+     * MySQL 的 NULL 安全等于运算符。
+     *
+     * <p>单独提成常量而不是写字面量：JSQLParser 4.x 的词法表里没有这个运算符，
+     * 解析前必须换掉，而它同时是 R016 的检测目标 —— 这层关系写在代码里比藏在字符串里清楚。
+     */
+    private static final String NULL_SAFE_EQUALS = "<=>";
 
     public ParseOutcome parse(String sql) {
         if (sql == null || sql.trim().isEmpty()) {
@@ -75,7 +108,7 @@ public final class SqlParserFacade {
                   // MySQL 的 NULL 安全等于 <=>：JSQLParser 4.x 的词法表里没有这个运算符，
                   // 会在解析阶段直接报错。AST 只用于统计解析成功率、不参与改写，
                   // 所以先换成普通等号再解析，避免 R016 这类语句每条都多一条无意义的 PARSE 记录。
-                  .replace("<" + "=>", "=")
+                  .replace(NULL_SAFE_EQUALS, "=")
                 .replaceAll("(?:\\$\\{[^}]*\\}\\s*){2,}", "t ")
                 .replaceAll("#\\{[^}]*}", "?")
                 .replaceAll("\\$\\{[^}]*}", "t");

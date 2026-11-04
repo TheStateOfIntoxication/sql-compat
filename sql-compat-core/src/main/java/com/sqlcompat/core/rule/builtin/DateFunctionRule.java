@@ -6,7 +6,7 @@ import com.sqlcompat.core.rule.DialectRule;
 import com.sqlcompat.core.rule.RuleContext;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
+
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -23,12 +23,11 @@ import com.sqlcompat.core.util.J8;
  */
 public final class DateFunctionRule implements DialectRule {
 
-    private static final Map<String, String> REWRITES = new LinkedHashMap<>(J8.map(
+    private static final Map<String, String> REWRITES = J8.stringMap(
             "date_add", "DATE_ADD(col, INTERVAL 1 DAY) -> col + INTERVAL '1 day'",
             "date_sub", "DATE_SUB(col, INTERVAL 1 DAY) -> col - INTERVAL '1 day'",
             "str_to_date", "STR_TO_DATE(s, '%Y-%m-%d') -> TO_DATE(s, 'YYYY-MM-DD')",
-            "unix_timestamp", "UNIX_TIMESTAMP() -> EXTRACT(EPOCH FROM now())"
-    ));
+            "unix_timestamp", "UNIX_TIMESTAMP() -> EXTRACT(EPOCH FROM now())");
 
     private static final Pattern PATTERN = Pattern.compile(
             "\\b(date_add|date_sub|str_to_date|unix_timestamp)\\s*\\(",

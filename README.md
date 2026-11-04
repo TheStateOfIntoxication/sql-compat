@@ -51,7 +51,8 @@ $ java -jar sql-compat.jar verify -c ./cases -s ./setup.sql -o verify.md
 ## 快速开始
 
 > **运行要求：JDK 8+ / Maven 3.5+** —— 政企现场大量项目就跑在 JDK 8 上，插件必须能在那里被加载，
-> 否则「加一段 pom 就进 CI」这句话就是空话。（构建本工程本身需要 JDK 9+，因为用 `--release 8` 产出 Java 8 字节码。）
+> 否则「加一段 pom 就进 CI」这句话就是空话。（构建本工程本身需要 JDK 9+，因为用 `--release 8` 产出 Java 8 字节码；
+> 在 JDK 21+ 上编译会看到 `源值 8 已过时` 的 `-Xlint:options` 提示 —— 那是 javac 对旧 release 的提醒，不是代码问题，本仓刻意不静音。）
 
 ### 方式一：Maven 插件（推荐，接入成本是一段 pom）
 

@@ -40,7 +40,8 @@
     <assertj.version>3.27.7</assertj.version>
     <mysql-driver.version>9.7.0</mysql-driver.version>
     <postgresql-driver.version>42.7.14</postgresql-driver.version>
-    <maven-plugin-api.version>3.9.16</maven-plugin-api.version>
+    <!-- Maven API 基线 = 运行时最低要求，两者必须一致：编译基线高于声明值，会在老 Maven 上抛 NoSuchMethodError 且前置检查放行。 -->
+    <maven-plugin-api.version>3.5.0</maven-plugin-api.version>
     <maven-plugin-tools.version>3.15.2</maven-plugin-tools.version>
 
     <maven-compiler-plugin.version>3.14.1</maven-compiler-plugin.version>

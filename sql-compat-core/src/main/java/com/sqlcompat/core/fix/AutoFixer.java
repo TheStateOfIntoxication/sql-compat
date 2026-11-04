@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Stream;
 import com.sqlcompat.core.util.J8;
 import com.sqlcompat.core.util.Io;
@@ -55,6 +56,35 @@ public final class AutoFixer {
 
         public boolean changed() {
             return !original.equals(fixed);
+        }
+
+        /**
+         * 值语义：这个类是从 record 降级来的，equals/hashCode/toString 必须补齐 ——
+         * 否则「内容相同但实例不同」会被判成不同，调用方按值去重/断言时会静默失效。
+         */
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof FixResult)) {
+                return false;
+            }
+            FixResult that = (FixResult) o;
+            return Objects.equals(source, that.source)
+                    && Objects.equals(original, that.original)
+                    && Objects.equals(fixed, that.fixed)
+                    && Objects.equals(appliedRuleIds, that.appliedRuleIds);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(source, original, fixed, appliedRuleIds);
+        }
+
+        @Override
+        public String toString() {
+            return "FixResult[" + source + ", rules=" + appliedRuleIds + ", changed=" + changed() + "]";
         }
     }
 
