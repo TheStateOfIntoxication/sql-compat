@@ -33,12 +33,12 @@ public final class ValueNormalizer {
         if (value == null) {
             return NULL_LITERAL;
         }
-        if (value instanceof Boolean bool) {
+        if (value instanceof Boolean) {
             // MySQL TINYINT(1) 返回 Integer(1)，PostgreSQL 返回 Boolean(true)。
-            return bool ? "1" : "0";
+            return ((Boolean) value) ? "1" : "0";
         }
-        if (value instanceof BigDecimal decimal) {
-            BigDecimal stripped = decimal.stripTrailingZeros();
+        if (value instanceof BigDecimal) {
+            BigDecimal stripped = ((BigDecimal) value).stripTrailingZeros();
             return stripped.scale() < 0 ? stripped.setScale(0).toPlainString() : stripped.toPlainString();
         }
         if (value instanceof Double || value instanceof Float) {
@@ -47,23 +47,23 @@ public final class ValueNormalizer {
             // 代价：第 10 位有效数字之后的小差异看不出来 —— 迁移检查可以接受。
             return String.format(Locale.ROOT, "%.10g", ((Number) value).doubleValue());
         }
-        if (value instanceof Number number) {
-            return number.toString();
+        if (value instanceof Number) {
+            return value.toString();
         }
-        if (value instanceof byte[] bytes) {
-            return Base64.getEncoder().encodeToString(bytes);
+        if (value instanceof byte[]) {
+            return Base64.getEncoder().encodeToString((byte[]) value);
         }
-        if (value instanceof Timestamp timestamp) {
-            return timestamp.toLocalDateTime().toString();
+        if (value instanceof Timestamp) {
+            return ((Timestamp) value).toLocalDateTime().toString();
         }
-        if (value instanceof Date date) {
-            return date.toLocalDate().toString();
+        if (value instanceof Date) {
+            return ((Date) value).toLocalDate().toString();
         }
-        if (value instanceof Time time) {
-            return time.toLocalTime().toString();
+        if (value instanceof Time) {
+            return ((Time) value).toLocalTime().toString();
         }
-        if (value instanceof TemporalAccessor temporal) {
-            return temporal.toString();
+        if (value instanceof TemporalAccessor) {
+            return value.toString();
         }
         return value.toString();
     }

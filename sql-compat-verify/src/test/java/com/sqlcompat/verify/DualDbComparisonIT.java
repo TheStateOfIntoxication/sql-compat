@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import java.nio.file.Paths;
 
 /**
  * 针对两个活库的集成测试。
@@ -27,7 +28,7 @@ class DualDbComparisonIT {
 
     private Path resource(String name) {
         try {
-            return Path.of(Objects.requireNonNull(getClass().getClassLoader().getResource(name)).toURI());
+            return Paths.get(Objects.requireNonNull(getClass().getClassLoader().getResource(name)).toURI());
         } catch (Exception e) {
             throw new IllegalStateException("缺少测试资源：" + name, e);
         }
@@ -49,7 +50,7 @@ class DualDbComparisonIT {
 
     private String envOr(String name, String fallback) {
         String value = System.getenv(name);
-        return value == null || value.isBlank() ? fallback : value;
+        return value == null || value.trim().isEmpty() ? fallback : value;
     }
 
     @Test

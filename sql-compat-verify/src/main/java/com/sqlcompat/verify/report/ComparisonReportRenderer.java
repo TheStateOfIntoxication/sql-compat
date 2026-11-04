@@ -42,7 +42,7 @@ public final class ComparisonReportRenderer {
     private void appendDifferences(StringBuilder sb, ComparisonReport report) {
         List<CaseOutcome> differences = report.outcomes().stream()
                 .filter(o -> o.status() != Status.CONSISTENT)
-                .toList();
+                .collect(java.util.stream.Collectors.toList());
         sb.append("## 差异明细\n\n");
         if (differences.isEmpty()) {
             sb.append("所有用例在两个数据库上返回了相同结果。\n\n");
@@ -56,7 +56,7 @@ public final class ComparisonReportRenderer {
                     .append(outcome.mysql().rowCount()).append("，")
                     .append(report.postgresLabel()).append('=')
                     .append(outcome.postgres().rowCount()).append('\n');
-            sb.append("\n```sql\n").append(outcome.sqlCase().sql().strip()).append("\n```\n\n");
+            sb.append("\n```sql\n").append(outcome.sqlCase().sql().trim()).append("\n```\n\n");
         }
     }
 

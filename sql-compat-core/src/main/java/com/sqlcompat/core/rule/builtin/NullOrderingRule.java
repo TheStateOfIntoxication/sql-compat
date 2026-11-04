@@ -1,5 +1,7 @@
 package com.sqlcompat.core.rule.builtin;
 
+import java.util.regex.Matcher;
+
 import com.sqlcompat.core.model.Issue;
 import com.sqlcompat.core.model.Severity;
 import com.sqlcompat.core.rule.DialectRule;
@@ -7,6 +9,7 @@ import com.sqlcompat.core.rule.RuleContext;
 
 import java.util.List;
 import java.util.regex.Pattern;
+import com.sqlcompat.core.util.J8;
 
 /**
  * R017 —— {@code ORDER BY col DESC} 叠加 {@code LIMIT} 时 NULL 的位置不同。
@@ -51,13 +54,13 @@ public final class NullOrderingRule implements DialectRule {
     public List<Issue> check(RuleContext context) {
         String lower = context.lowerCaseSql();
         if (!lower.contains("limit") || !lower.contains("order by")) {
-            return List.of();
+            return J8.list();
         }
-        var matcher = ORDER_BY_DESC.matcher(context.sql());
+        Matcher matcher = ORDER_BY_DESC.matcher(context.sql());
         if (!matcher.find()) {
-            return List.of();
+            return J8.list();
         }
-        return List.of(new Issue(
+        return J8.list(new Issue(
                 id(),
                 name(),
                 defaultSeverity(),

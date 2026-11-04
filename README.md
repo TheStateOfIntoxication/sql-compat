@@ -4,7 +4,7 @@
 
 [![ci](https://github.com/TheStateOfIntoxication/sql-compat/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/TheStateOfIntoxication/sql-compat/actions/workflows/ci.yml)
 [![license](https://img.shields.io/badge/license-MIT-3da639.svg)](LICENSE)
-[![jdk](https://img.shields.io/badge/JDK-25-437291.svg)](https://adoptium.net/)
+[![jdk](https://img.shields.io/badge/JDK-8%2B-437291.svg)](https://adoptium.net/)
 [![rules](https://img.shields.io/badge/规则-20%20条-1f6feb.svg)](docs/rules.md)
 
 ---
@@ -45,7 +45,8 @@ issues: 50  (blocker=19 major=22 minor=9 info=0)
 
 ## 快速开始
 
-**要求**：JDK 25+（`maven.compiler.release=25`），Maven 3.9+
+> **运行要求：JDK 8+ / Maven 3.5+** —— 政企现场大量项目就跑在 JDK 8 上，插件必须能在那里被加载，
+> 否则「加一段 pom 就进 CI」这句话就是空话。（构建本工程本身需要 JDK 9+，因为用 `--release 8` 产出 Java 8 字节码。）
 
 ### 方式一：Maven 插件（推荐，接入成本是一段 pom）
 
@@ -65,6 +66,13 @@ issues: 50  (blocker=19 major=22 minor=9 info=0)
 ```
 
 `mvn verify` 时自动跑，报告落到 `target/sql-compat/sql-compat-report.html`。
+
+不配 `<executions>` 时，也可以用短命令单独跑（插件在 pom 里声明过就认这个短前缀）：
+
+```bash
+mvn sqlcompat:check
+mvn sqlcompat:check -Dsqlcompat.failOn=BLOCKER
+```
 
 插件参数：
 
@@ -294,7 +302,8 @@ public final class InsertIgnoreRule implements DialectRule {
 - [x] v0.4 `--fix` 自动改写：6 条可改规则（3 等价 + 3 需确认），幂等 + 改后重扫验收
 - [ ] v0.5 用例生成：从 Mapper XML 反向生成一致性用例，减少手写成本
 - [x] v1.0 Maven 插件（`mvn sql-compat:check`，接入成本一段 pom）
-- [ ] v1.1 IDE 插件 / Gradle 插件
+- [x] v1.1 运行期降到 **JDK 8 + Maven 3.5**（解析器退到 4.x，去掉 record / text block / Stream.toList）
+- [ ] v1.2 IDE 插件 / Gradle 插件
 
 ---
 

@@ -63,7 +63,7 @@ public final class UpsertRule implements DialectRule {
             String message = valuesRefs.isEmpty()
                     ? "ON DUPLICATE KEY UPDATE 是 MySQL 专有；ON CONFLICT 的冲突目标列是强制的，无法自动推断。"
                     : "ON DUPLICATE KEY UPDATE 是 MySQL 专有；VALUES(" + String.join(", ", valuesRefs)
-                      + ") 要改成 EXCLUDED." + valuesRefs.getFirst().toLowerCase(Locale.ROOT)
+                      + ") 要改成 EXCLUDED." + valuesRefs.get(0).toLowerCase(Locale.ROOT)
                       + "，并且必须显式写出冲突目标列。";
             issues.add(new Issue(
                     id(),

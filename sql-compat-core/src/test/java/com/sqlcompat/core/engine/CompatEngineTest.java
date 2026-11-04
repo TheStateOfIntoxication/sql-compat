@@ -15,11 +15,12 @@ import java.util.List;
 import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import java.nio.file.Paths;
 
 class CompatEngineTest {
 
     private Path fixtures() throws URISyntaxException {
-        return Path.of(Objects.requireNonNull(
+        return Paths.get(Objects.requireNonNull(
                 getClass().getClassLoader().getResource("fixtures")).toURI());
     }
 

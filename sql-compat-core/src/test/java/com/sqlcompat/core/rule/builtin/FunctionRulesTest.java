@@ -31,8 +31,8 @@ class FunctionRulesTest {
                     "SELECT GROUP_CONCAT(a.name) FROM demo_asset a WHERE a.owner_id = 1");
 
             assertThat(issues).hasSize(1);
-            assertThat(issues.getFirst().ruleId()).isEqualTo("R008");
-            assertThat(issues.getFirst().suggestion()).contains("STRING_AGG");
+            assertThat(issues.get(0).ruleId()).isEqualTo("R008");
+            assertThat(issues.get(0).suggestion()).contains("STRING_AGG");
         }
 
         @Test
@@ -42,7 +42,7 @@ class FunctionRulesTest {
                     "SELECT GROUP_CONCAT(a.name SEPARATOR '|') FROM demo_asset a");
 
             assertThat(issues).hasSize(1);
-            assertThat(issues.getFirst().message()).contains("SEPARATOR");
+            assertThat(issues.get(0).message()).contains("SEPARATOR");
         }
 
         @Test
@@ -68,8 +68,8 @@ class FunctionRulesTest {
                     "SELECT a.id FROM demo_asset a WHERE a.code REGEXP '^AB[0-9]+$'");
 
             assertThat(issues).hasSize(1);
-            assertThat(issues.getFirst().ruleId()).isEqualTo("R012");
-            assertThat(issues.getFirst().suggestion()).contains("~");
+            assertThat(issues.get(0).ruleId()).isEqualTo("R012");
+            assertThat(issues.get(0).suggestion()).contains("~");
         }
 
         @Test
@@ -104,8 +104,8 @@ class FunctionRulesTest {
                     "SELECT JSON_EXTRACT(a.attrs, '$.owner') FROM demo_asset a");
 
             assertThat(issues).hasSize(1);
-            assertThat(issues.getFirst().ruleId()).isEqualTo("R013");
-            assertThat(issues.getFirst().message()).contains("->>");
+            assertThat(issues.get(0).ruleId()).isEqualTo("R013");
+            assertThat(issues.get(0).message()).contains("->>");
         }
 
         @Test

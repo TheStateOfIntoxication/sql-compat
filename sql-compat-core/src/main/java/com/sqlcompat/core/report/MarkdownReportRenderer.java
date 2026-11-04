@@ -38,7 +38,7 @@ public final class MarkdownReportRenderer implements ReportRenderer {
         sb.append('\n');
 
         sb.append("## 问题明细\n\n");
-        List<ScanResult> withIssues = report.results().stream().filter(r -> !r.clean()).toList();
+        List<ScanResult> withIssues = report.results().stream().filter(r -> !r.clean()).collect(java.util.stream.Collectors.toList());
         if (withIssues.isEmpty()) {
             sb.append("未发现兼容性问题。\n");
             return sb.toString();
@@ -50,10 +50,10 @@ public final class MarkdownReportRenderer implements ReportRenderer {
                 sb.append("- **").append(issue.severity()).append("** `").append(issue.ruleId())
                         .append("` ").append(issue.ruleName()).append('\n');
                 sb.append("  - ").append(issue.message()).append('\n');
-                if (issue.snippet() != null && !issue.snippet().isBlank()) {
+                if (issue.snippet() != null && !issue.snippet().trim().isEmpty()) {
                     sb.append("  - 命中：`").append(issue.snippet()).append("`\n");
                 }
-                if (issue.suggestion() != null && !issue.suggestion().isBlank()) {
+                if (issue.suggestion() != null && !issue.suggestion().trim().isEmpty()) {
                     sb.append("  - 改写：`").append(issue.suggestion()).append("`\n");
                 }
             }

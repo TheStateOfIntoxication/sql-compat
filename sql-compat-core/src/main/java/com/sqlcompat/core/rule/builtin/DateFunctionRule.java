@@ -12,6 +12,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import com.sqlcompat.core.util.J8;
 
 /**
  * R020 —— MySQL 的日期运算与日期解析函数。
@@ -22,7 +23,7 @@ import java.util.regex.Pattern;
  */
 public final class DateFunctionRule implements DialectRule {
 
-    private static final Map<String, String> REWRITES = new LinkedHashMap<>(Map.of(
+    private static final Map<String, String> REWRITES = new LinkedHashMap<>(J8.map(
             "date_add", "DATE_ADD(col, INTERVAL 1 DAY) -> col + INTERVAL '1 day'",
             "date_sub", "DATE_SUB(col, INTERVAL 1 DAY) -> col - INTERVAL '1 day'",
             "str_to_date", "STR_TO_DATE(s, '%Y-%m-%d') -> TO_DATE(s, 'YYYY-MM-DD')",

@@ -31,8 +31,8 @@ class SemanticRulesTest {
                     "SELECT a.id, a.name FROM demo_asset a LIMIT 20");
 
             assertThat(issues).hasSize(1);
-            assertThat(issues.getFirst().ruleId()).isEqualTo("R010");
-            assertThat(issues.getFirst().message()).contains("未定义");
+            assertThat(issues.get(0).ruleId()).isEqualTo("R010");
+            assertThat(issues.get(0).message()).contains("未定义");
         }
 
         @Test
@@ -67,8 +67,8 @@ class SemanticRulesTest {
                     "SELECT a.id FROM demo_asset a WHERE a.owner_id <=> #{ownerId}");
 
             assertThat(issues).hasSize(1);
-            assertThat(issues.getFirst().ruleId()).isEqualTo("R016");
-            assertThat(issues.getFirst().suggestion()).contains("IS NOT DISTINCT FROM");
+            assertThat(issues.get(0).ruleId()).isEqualTo("R016");
+            assertThat(issues.get(0).suggestion()).contains("IS NOT DISTINCT FROM");
         }
 
         @Test
@@ -94,8 +94,8 @@ class SemanticRulesTest {
                     "SELECT a.id FROM demo_asset a ORDER BY a.created_at DESC LIMIT 20");
 
             assertThat(issues).hasSize(1);
-            assertThat(issues.getFirst().ruleId()).isEqualTo("R017");
-            assertThat(issues.getFirst().suggestion()).contains("NULLS LAST");
+            assertThat(issues.get(0).ruleId()).isEqualTo("R017");
+            assertThat(issues.get(0).suggestion()).contains("NULLS LAST");
         }
 
         @Test
@@ -130,8 +130,8 @@ class SemanticRulesTest {
                     "SELECT DATE_ADD(a.expired_at, INTERVAL 30 DAY) FROM demo_asset a");
 
             assertThat(issues).hasSize(1);
-            assertThat(issues.getFirst().ruleId()).isEqualTo("R020");
-            assertThat(issues.getFirst().suggestion()).contains("INTERVAL '1 day'");
+            assertThat(issues.get(0).ruleId()).isEqualTo("R020");
+            assertThat(issues.get(0).suggestion()).contains("INTERVAL '1 day'");
         }
 
         @Test
@@ -141,7 +141,7 @@ class SemanticRulesTest {
                     "SELECT STR_TO_DATE(a.day, '%Y-%m-%d') FROM demo_asset a");
 
             assertThat(issues).hasSize(1);
-            assertThat(issues.getFirst().suggestion())
+            assertThat(issues.get(0).suggestion())
                     .isEqualTo("STR_TO_DATE(s, '%Y-%m-%d') -> TO_DATE(s, 'YYYY-MM-DD')");
         }
 

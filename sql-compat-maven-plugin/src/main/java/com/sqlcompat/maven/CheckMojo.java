@@ -22,6 +22,10 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import com.sqlcompat.core.util.J8;
+import com.sqlcompat.core.util.Io;
+import java.util.LinkedHashSet;
+import java.util.Collections;
 
 /**
  * 把兼容性检查挂到 {@code verify} 阶段。
@@ -139,10 +143,10 @@ public class CheckMojo extends AbstractMojo {
         }
         // 允许写 "R011,PARSE" 这种逗号串
         List<String> ids = ignore.stream()
-                .flatMap(value -> List.of(value.split(",")).stream())
+                .flatMap(value -> J8.list(value.split(",")).stream())
                 .map(String::trim)
                 .filter(value -> !value.isEmpty())
-                .toList();
+                .collect(java.util.stream.Collectors.toList());
         return registry.excluding(ids);
     }
 
@@ -154,7 +158,7 @@ public class CheckMojo extends AbstractMojo {
         Path target = dir.resolve("sql-compat-report." + renderer.extension());
         try {
             Files.createDirectories(dir);
-            Files.writeString(target, renderer.render(report), StandardCharsets.UTF_8);
+            Io.writeString(target, renderer.render(report), StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new MojoFailureException("sql-compat 写报告失败：" + e.getMessage(), e);
         }
@@ -163,7 +167,7 @@ public class CheckMojo extends AbstractMojo {
     }
 
     private Severity parseSeverity(String value) throws MojoFailureException {
-        if (value == null || value.isBlank()) {
+        if (value == null || value.trim().isEmpty()) {
             return null;
         }
         try {
@@ -176,6 +180,6 @@ public class CheckMojo extends AbstractMojo {
 
     /** 供测试使用。 */
     Set<String> configuredIgnores() {
-        return ignore == null ? Set.of() : Set.copyOf(ignore);
+        return ignore == null ? J8.set() : java.util.Collections.unmodifiableSet(new java.util.LinkedHashSet<>(ignore));
     }
 }

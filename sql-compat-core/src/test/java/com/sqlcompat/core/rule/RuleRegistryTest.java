@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import com.sqlcompat.core.util.J8;
+import com.sqlcompat.core.util.Io;
 
 class RuleRegistryTest {
 
@@ -34,7 +36,7 @@ class RuleRegistryTest {
     void excludingReturnsNewRegistry() {
         RuleRegistry defaults = RuleRegistry.defaults();
 
-        RuleRegistry filtered = defaults.excluding(List.of("R011", "r010"));
+        RuleRegistry filtered = defaults.excluding(J8.list("R011", "r010"));
 
         assertThat(filtered.size()).isEqualTo(18);
         assertThat(filtered.rules()).extracting(DialectRule::id).doesNotContain("R011", "R010");
@@ -46,7 +48,7 @@ class RuleRegistryTest {
     void excludingWithNothingIsNoOp() {
         RuleRegistry defaults = RuleRegistry.defaults();
 
-        assertThat(defaults.excluding(List.of())).isSameAs(defaults);
+        assertThat(defaults.excluding(J8.list())).isSameAs(defaults);
         assertThat(defaults.excluding(null)).isSameAs(defaults);
     }
 
@@ -66,28 +68,39 @@ class RuleRegistryTest {
     @DisplayName("解析失败会作为 PARSE 级 INFO 报出来，且可被忽略")
     void parseFailuresAreVisibleAndIgnorable(@TempDir Path dir) throws IOException {
         Path mapper = dir.resolve("Broken.xml");
-        Files.writeString(mapper, """
-                <mapper namespace="demo">
-                    <select id="oracleOnly">
-                        SELECT CONNECT_BY_ROOT(o.id) FROM demo_org o
-                    </select>
-                </mapper>
-                """);
+        Io.writeString(mapper, String.join("\n",
+                "<mapper namespace=\"demo\">",
+                "    <select id=\"oracleOnly\">",
+                "        SELECT CONNECT_BY_ROOT(o.id) FROM demo_org o",
+                "    </select>",
+                "</mapper>"));
 
         Report reported = new CompatEngine().scan(mapper, "MySQL", "Kingbase/PostgreSQL");
         assertThat(reported.parseErrorCount()).isEqualTo(1);
         assertThat(reported.issueCountBySeverity().get(Severity.INFO)).isEqualTo(1);
-        assertThat(reported.results().getFirst().issues())
+        assertThat(reported.results().get(0).issues())
                 .anySatisfy(i -> assertThat(i.ruleId()).isEqualTo(CompatEngine.PARSE_ISSUE_RULE_ID));
 
-        Report silenced = new CompatEngine(RuleRegistry.defaults(), Set.of("PARSE"))
+        Report silenced = new CompatEngine(RuleRegistry.defaults(), J8.set("PARSE"))
                 .scan(mapper, "MySQL", "Kingbase/PostgreSQL");
         assertThat(silenced.issueCount()).isZero();
         assertThat(silenced.parseErrorCount()).as("统计数字仍保留").isEqualTo(1);
     }
 
     /** 只用于验证注册表行为，不参与真实扫描。 */
-    private record StubRule(String id) implements DialectRule {
+    private static final class StubRule implements DialectRule {
+
+        private final String id;
+
+        StubRule(String id) {
+            this.id = id;
+        }
+
+        @Override
+        public String id() {
+            return id;
+        }
+
         @Override
         public String name() {
             return "桩规则";
@@ -105,7 +118,7 @@ class RuleRegistryTest {
 
         @Override
         public List<com.sqlcompat.core.model.Issue> check(RuleContext context) {
-            return List.of();
+            return J8.list();
         }
     }
 }

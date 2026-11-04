@@ -13,28 +13,28 @@ import java.nio.file.Path;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import com.sqlcompat.core.util.Io;
 
 class AutoFixerTest {
 
-    private static final String MAPPER = """
-            <?xml version="1.0" encoding="UTF-8"?>
-            <mapper namespace="demo.mapper.AssetMapper">
-                <select id="byId" resultType="map">
-                    SELECT `asset_name`, IFNULL(a.owner_name, 'x') AS owner_name
-                    FROM demo_asset a WHERE a.id = #{id}
-                </select>
-                <select id="paged" resultType="map">
-                    SELECT a.id FROM demo_asset a ORDER BY a.id LIMIT 10, 20
-                </select>
-                <select id="nse" resultType="map">
-                    SELECT a.id FROM demo_asset a WHERE a.owner_id &lt;=&gt; #{ownerId}
-                </select>
-            </mapper>
-            """;
+    private static final String MAPPER = String.join("\n",
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+            "<mapper namespace=\"demo.mapper.AssetMapper\">",
+            "    <select id=\"byId\" resultType=\"map\">",
+            "        SELECT `asset_name`, IFNULL(a.owner_name, 'x') AS owner_name",
+            "        FROM demo_asset a WHERE a.id = #{id}",
+            "    </select>",
+            "    <select id=\"paged\" resultType=\"map\">",
+            "        SELECT a.id FROM demo_asset a ORDER BY a.id LIMIT 10, 20",
+            "    </select>",
+            "    <select id=\"nse\" resultType=\"map\">",
+            "        SELECT a.id FROM demo_asset a WHERE a.owner_id &lt;=&gt; #{ownerId}",
+            "    </select>",
+            "</mapper>");
 
     private Path writeMapper(Path dir) throws IOException {
         Path mapper = dir.resolve("AssetMapper.xml");
-        Files.writeString(mapper, MAPPER);
+        Io.writeString(mapper, MAPPER);
         return mapper;
     }
 
@@ -53,7 +53,7 @@ class AutoFixerTest {
                 .fixTree(mapper, out);
 
         assertThat(results).hasSize(1);
-        String fixed = Files.readString(out.resolve("AssetMapper.xml"));
+        String fixed = Io.readString(out.resolve("AssetMapper.xml"));
         assertThat(fixed).contains("COALESCE(a.owner_name, 'x')");
         assertThat(fixed).contains("LIMIT 20 OFFSET 10");
         assertThat(fixed).contains(" IS NOT DISTINCT FROM ");
@@ -61,7 +61,7 @@ class AutoFixerTest {
         assertThat(fixed).doesNotContain("&lt;=&gt;");
         // 反引号属于 REVIEW 级，SAFE 模式必须保留原样。
         assertThat(fixed).contains("`asset_name`");
-        assertThat(results.getFirst().appliedRuleIds()).containsExactly("R001", "R004", "R016");
+        assertThat(results.get(0).appliedRuleIds()).containsExactly("R001", "R004", "R016");
     }
 
     @Test
@@ -72,7 +72,7 @@ class AutoFixerTest {
 
         new AutoFixer(RuleRegistry.defaults(), FixMode.INCLUDE_REVIEW).fixTree(mapper, out);
 
-        String fixed = Files.readString(out.resolve("AssetMapper.xml"));
+        String fixed = Io.readString(out.resolve("AssetMapper.xml"));
         assertThat(fixed).contains("\"asset_name\"");
         assertThat(fixed).doesNotContain("`asset_name`");
     }
@@ -95,11 +95,11 @@ class AutoFixerTest {
     @DisplayName("不改源文件：改写结果写到输出目录")
     void neverTouchesSource(@TempDir Path dir) throws IOException {
         Path mapper = writeMapper(dir);
-        String original = Files.readString(mapper);
+        String original = Io.readString(mapper);
 
         new AutoFixer(RuleRegistry.defaults(), FixMode.INCLUDE_REVIEW).fixTree(mapper, dir.resolve("out"));
 
-        assertThat(Files.readString(mapper)).isEqualTo(original);
+        assertThat(Io.readString(mapper)).isEqualTo(original);
     }
 
     @Test
@@ -116,8 +116,8 @@ class AutoFixerTest {
         assertThat(results).allSatisfy(r -> assertThat(r.changed())
                 .as("第二次改写不应再有变化，否则规则之间在互相打架")
                 .isFalse());
-        assertThat(Files.readString(first.resolve("AssetMapper.xml")))
-                .isEqualTo(Files.readString(second.resolve("AssetMapper.xml")));
+        assertThat(Io.readString(first.resolve("AssetMapper.xml")))
+                .isEqualTo(Io.readString(second.resolve("AssetMapper.xml")));
     }
 
     @Test
@@ -128,6 +128,6 @@ class AutoFixerTest {
 
         new AutoFixer(RuleRegistry.defaults(), FixMode.OFF).fixTree(mapper, out);
 
-        assertThat(Files.readString(out.resolve("AssetMapper.xml"))).isEqualTo(MAPPER);
+        assertThat(Io.readString(out.resolve("AssetMapper.xml"))).isEqualTo(MAPPER);
     }
 }

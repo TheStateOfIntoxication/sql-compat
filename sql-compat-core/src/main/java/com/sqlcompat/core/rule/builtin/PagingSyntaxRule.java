@@ -82,7 +82,13 @@ public final class PagingSyntaxRule implements DialectRule {
     @Override
     public String fix(String sql) {
         // 参数位置互换，语义不变。
-        return PATTERN.matcher(sql).replaceAll(match ->
-                "LIMIT " + match.group(2) + " OFFSET " + match.group(1));
+        Matcher matcher = PATTERN.matcher(sql);
+        StringBuffer out = new StringBuffer();
+        while (matcher.find()) {
+            String replacement = "LIMIT " + matcher.group(2) + " OFFSET " + matcher.group(1);
+            matcher.appendReplacement(out, Matcher.quoteReplacement(replacement));
+        }
+        matcher.appendTail(out);
+        return out.toString();
     }
 }

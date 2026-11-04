@@ -11,6 +11,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Stream;
+import com.sqlcompat.core.util.Io;
 
 /**
  * 从 {@code .sql} 文件目录加载用例。
@@ -44,9 +45,9 @@ public final class CaseLoader {
     }
 
     private SqlCase readCase(Path file) throws IOException {
-        String sql = stripLineComments(Files.readString(file, StandardCharsets.UTF_8))
+        String sql = stripLineComments(Io.readString(file, StandardCharsets.UTF_8))
                 .replaceAll(";\\s*$", "")
-                .strip();
+                .trim();
         if (sql.isEmpty()) {
             return null;
         }
@@ -59,7 +60,7 @@ public final class CaseLoader {
     private String stripLineComments(String sql) {
         StringBuilder sb = new StringBuilder(sql.length());
         for (String line : sql.split("\\R")) {
-            if (line.stripLeading().startsWith("--")) {
+            if (line.trim().startsWith("--")) {
                 continue;
             }
             sb.append(line).append('\n');

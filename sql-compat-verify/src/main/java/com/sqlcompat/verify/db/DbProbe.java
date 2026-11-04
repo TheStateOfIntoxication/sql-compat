@@ -11,6 +11,8 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import com.sqlcompat.core.util.J8;
+import java.util.Collections;
 
 /**
  * 在单个连接目标上执行用例并计时。
@@ -82,7 +84,7 @@ public final class DbProbe implements AutoCloseable {
                 }
             }
             // DML：比较影响行数，而不是结果集。
-            return List.of(List.of(String.valueOf(statement.getUpdateCount())));
+            return J8.list(J8.list(String.valueOf(statement.getUpdateCount())));
         }
     }
 
@@ -95,9 +97,9 @@ public final class DbProbe implements AutoCloseable {
             for (int c = 1; c <= columnCount; c++) {
                 row.add(ValueNormalizer.normalize(rs.getObject(c)));
             }
-            rows.add(List.copyOf(row));
+            rows.add(java.util.Collections.unmodifiableList(new java.util.ArrayList<>(row)));
         }
-        return List.copyOf(rows);
+        return java.util.Collections.unmodifiableList(new java.util.ArrayList<>(rows));
     }
 
     private long median(List<Long> samples) {

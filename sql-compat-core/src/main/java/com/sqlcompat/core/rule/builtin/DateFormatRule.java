@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import com.sqlcompat.core.util.J8;
+import java.util.Locale;
 
 /**
  * R002 —— MySQL 的 {@code DATE_FORMAT(col, '%Y-%m-%d')}，需要改写为 {@code TO_CHAR}。
@@ -26,7 +28,7 @@ public final class DateFormatRule implements DialectRule {
     private static final Pattern CALL = Pattern.compile("\\bdate_format\\s*\\(", Pattern.CASE_INSENSITIVE);
 
     /** 常见的 MySQL 格式符 → PostgreSQL 格式符。顺序无关，替换时逐字符扫描。 */
-    private static final List<String[]> SPECIFIERS = List.of(
+    private static final List<String[]> SPECIFIERS = J8.list(
             new String[]{"%Y", "YYYY"},
             new String[]{"%y", "YY"},
             new String[]{"%m", "MM"},
@@ -119,14 +121,14 @@ public final class DateFormatRule implements DialectRule {
             if (parts.size() != 2) {
                 continue;
             }
-            String format = parts.get(1).strip();
+            String format = parts.get(1).trim();
             String converted = convertFormatLiteral(format);
             if (converted == null) {
                 // 不认识的格式符：整段保留，让规则继续报出来。
                 continue;
             }
             out.append(sql, last, matcher.start());
-            out.append("TO_CHAR(").append(parts.get(0).strip()).append(", ").append(converted).append(')');
+            out.append("TO_CHAR(").append(parts.get(0).trim()).append(", ").append(converted).append(')');
             last = closeParen + 1;
         }
         if (last == 0) {

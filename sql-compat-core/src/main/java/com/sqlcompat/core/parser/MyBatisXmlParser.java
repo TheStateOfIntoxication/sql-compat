@@ -21,6 +21,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Pattern;
+import com.sqlcompat.core.util.J8;
+import com.sqlcompat.core.util.Io;
+import java.util.regex.Matcher;
 
 /**
  * 从 MyBatis Mapper XML 中抽取语句。
@@ -33,14 +36,14 @@ import java.util.regex.Pattern;
  */
 public final class MyBatisXmlParser {
 
-    private static final Set<String> STATEMENT_TAGS = Set.of("select", "insert", "update", "delete");
+    private static final Set<String> STATEMENT_TAGS = J8.set("select", "insert", "update", "delete");
 
     /** 值得记录的标签，其余标签直接丢弃不留痕迹。 */
-    private static final Set<String> TRACKED_TAGS = Set.of(
+    private static final Set<String> TRACKED_TAGS = J8.set(
             "if", "foreach", "choose", "when", "otherwise", "where", "set", "trim", "bind", "include");
 
     public List<SqlStatement> parse(Path xmlFile) throws IOException {
-        String raw = Files.readString(xmlFile, StandardCharsets.UTF_8);
+        String raw = Io.readString(xmlFile, StandardCharsets.UTF_8);
         Document document = readDocument(xmlFile);
         Element root = document.getDocumentElement();
         String namespace = root.getAttribute("namespace");
@@ -55,12 +58,12 @@ public final class MyBatisXmlParser {
                 }
                 Element element = (Element) node;
                 String id = element.getAttribute("id");
-                if (id == null || id.isBlank()) {
+                if (id == null || id.trim().isEmpty()) {
                     continue;
                 }
                 Set<String> dynamicTags = new LinkedHashSet<>();
                 String sql = flatten(element, dynamicTags);
-                if (sql.isBlank()) {
+                if (sql.trim().isEmpty()) {
                     continue;
                 }
                 statements.add(new SqlStatement(
@@ -94,11 +97,16 @@ public final class MyBatisXmlParser {
                     dynamicTags.add(tagName);
                 }
                 String inner = flatten(child, dynamicTags);
-                switch (tagName) {
-                    case "where" -> sb.append(' ').append(renderWhere(inner)).append(' ');
-                    case "set" -> sb.append(' ').append(renderSet(inner)).append(' ');
-                    case "choose" -> sb.append(' ').append(renderChooseFirstBranch(child, dynamicTags)).append(' ');
-                    default -> sb.append(' ').append(inner).append(' ');
+                // 用 if-else 而不是 switch 表达式：switch 表达式是 Java 14 的语法，
+                // 而本工具要能在 JDK 8 的 Maven 里运行。
+                if ("where".equals(tagName)) {
+                    sb.append(' ').append(renderWhere(inner)).append(' ');
+                } else if ("set".equals(tagName)) {
+                    sb.append(' ').append(renderSet(inner)).append(' ');
+                } else if ("choose".equals(tagName)) {
+                    sb.append(' ').append(renderChooseFirstBranch(child, dynamicTags)).append(' ');
+                } else {
+                    sb.append(' ').append(inner).append(' ');
                 }
             }
         }
@@ -107,13 +115,13 @@ public final class MyBatisXmlParser {
 
     /** {@code <where>}：生成 WHERE，并抹掉内层开头的 AND / OR（MyBatis 就是这么干的）。 */
     private String renderWhere(String inner) {
-        String body = inner.strip().replaceFirst("(?i)^(and|or)\\s+", "");
+        String body = inner.trim().replaceFirst("(?i)^(and|or)\\s+", "");
         return body.isEmpty() ? "" : "WHERE " + body;
     }
 
     /** {@code <set>}：生成 SET，并抹掉末尾多余逗号。 */
     private String renderSet(String inner) {
-        String body = inner.strip().replaceFirst(",+$", "");
+        String body = inner.trim().replaceFirst(",+$", "");
         return body.isEmpty() ? "" : "SET " + body;
     }
 

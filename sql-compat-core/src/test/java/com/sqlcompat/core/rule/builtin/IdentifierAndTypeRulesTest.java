@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import com.sqlcompat.core.util.J8;
 
 /**
  * 批 3（标识符 / MyBatis / 类型）：R009 反引号、R011 foreach、
@@ -35,7 +36,7 @@ class IdentifierAndTypeRulesTest {
 
             assertThat(issues).hasSize(2);
             assertThat(issues).allSatisfy(i -> assertThat(i.ruleId()).isEqualTo("R009"));
-            assertThat(issues.getFirst().suggestion()).isEqualTo("`asset_name` -> \"asset_name\"");
+            assertThat(issues.get(0).suggestion()).isEqualTo("`asset_name` -> \"asset_name\"");
         }
 
         @Test
@@ -59,12 +60,12 @@ class IdentifierAndTypeRulesTest {
         void firesWithForeach() {
             SqlStatement statement = new SqlStatement("demo.mapper", "byOwners",
                     "SELECT a.id FROM demo_asset a WHERE a.owner_id IN ( )",
-                    SourceLocation.of("case.xml", 1), Set.of("foreach", "if"));
+                    SourceLocation.of("case.xml", 1), J8.set("foreach", "if"));
             List<Issue> issues = rule.check(new RuleContext(statement, null));
 
             assertThat(issues).hasSize(1);
-            assertThat(issues.getFirst().ruleId()).isEqualTo("R011");
-            assertThat(issues.getFirst().message()).contains("65535");
+            assertThat(issues.get(0).ruleId()).isEqualTo("R011");
+            assertThat(issues.get(0).message()).contains("65535");
         }
 
         @Test
@@ -72,7 +73,7 @@ class IdentifierAndTypeRulesTest {
         void silentWithoutForeach() {
             SqlStatement statement = new SqlStatement("demo.mapper", "byId",
                     "SELECT a.id FROM demo_asset a WHERE a.id = 1",
-                    SourceLocation.of("case.xml", 2), Set.of("if"));
+                    SourceLocation.of("case.xml", 2), J8.set("if"));
             List<Issue> issues = rule.check(new RuleContext(statement, null));
 
             assertThat(issues).isEmpty();
@@ -92,8 +93,8 @@ class IdentifierAndTypeRulesTest {
                     "CREATE TABLE demo_asset (id BIGINT, enabled TINYINT(1) DEFAULT 0)");
 
             assertThat(issues).hasSize(1);
-            assertThat(issues.getFirst().ruleId()).isEqualTo("R014");
-            assertThat(issues.getFirst().message()).contains("SMALLINT");
+            assertThat(issues.get(0).ruleId()).isEqualTo("R014");
+            assertThat(issues.get(0).message()).contains("SMALLINT");
         }
 
         @Test
@@ -120,8 +121,8 @@ class IdentifierAndTypeRulesTest {
                             + "DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP)");
 
             assertThat(issues).hasSize(1);
-            assertThat(issues.getFirst().ruleId()).isEqualTo("R015");
-            assertThat(issues.getFirst().message()).contains("停止更新");
+            assertThat(issues.get(0).ruleId()).isEqualTo("R015");
+            assertThat(issues.get(0).message()).contains("停止更新");
         }
 
         @Test
@@ -156,8 +157,8 @@ class IdentifierAndTypeRulesTest {
                     "CREATE TABLE demo_asset (id BIGINT, name VARCHAR(200), KEY idx_name (name(10)))");
 
             assertThat(issues).hasSize(1);
-            assertThat(issues.getFirst().ruleId()).isEqualTo("R018");
-            assertThat(issues.getFirst().suggestion()).contains("left(name, 10)");
+            assertThat(issues.get(0).ruleId()).isEqualTo("R018");
+            assertThat(issues.get(0).suggestion()).contains("left(name, 10)");
         }
 
         @Test

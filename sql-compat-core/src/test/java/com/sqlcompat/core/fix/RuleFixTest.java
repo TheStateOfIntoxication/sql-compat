@@ -16,6 +16,8 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import com.sqlcompat.core.util.J8;
+import java.util.Locale;
 
 /**
  * 自动改写的正确性与幂等性。
@@ -203,7 +205,7 @@ class RuleFixTest {
     @Test
     @DisplayName("不支持改写的规则 fixable() 为 false，避免被误加入改写链")
     void nonFixableRulesAreDeclared() {
-        List<DialectRule> fixable = List.of(
+        List<DialectRule> fixable = J8.list(
                 new IfnullRule(), new PagingSyntaxRule(), new NullSafeEqualsRule(),
                 new DateFormatRule(), new BacktickQuoteRule(), new JsonExtractRule());
 

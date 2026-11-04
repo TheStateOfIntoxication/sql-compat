@@ -6,6 +6,7 @@ import com.sqlcompat.core.rule.DialectRule;
 import com.sqlcompat.core.rule.RuleContext;
 
 import java.util.List;
+import com.sqlcompat.core.util.J8;
 
 /**
  * R011 —— MyBatis {@code <foreach>} 生成集合参数带来的差异。
@@ -51,9 +52,9 @@ public final class ForeachBindingRule implements DialectRule {
     @Override
     public List<Issue> check(RuleContext context) {
         if (!context.statement().hasDynamicTag("foreach")) {
-            return List.of();
+            return J8.list();
         }
-        return List.of(new Issue(
+        return J8.list(new Issue(
                 id(),
                 name(),
                 defaultSeverity(),

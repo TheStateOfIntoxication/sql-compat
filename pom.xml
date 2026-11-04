@@ -32,9 +32,9 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <maven.compiler.release>25</maven.compiler.release>
+    <maven.compiler.release>8</maven.compiler.release>
 
-    <jsqlparser.version>5.2</jsqlparser.version>
+    <jsqlparser.version>4.9</jsqlparser.version>
     <picocli.version>4.7.7</picocli.version>
     <junit.version>5.11.4</junit.version>
     <assertj.version>3.27.7</assertj.version>
@@ -139,6 +139,15 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-plugin-plugin</artifactId>
           <version>${maven-plugin-tools.version}</version>
+          <configuration>
+            <!--
+              插件要能在**客户的旧环境**里跑：JDK 8 + Maven 3.5（政企现场很常见）。
+              这两个值决定 Maven 的前置检查怎么报错；不写死就会跟着构建机的版本水涨船高，
+              变成「在我机器上能用，换台机器说 Required Maven 3.9.16」。
+            -->
+            <requiredJavaVersion>1.8</requiredJavaVersion>
+            <requiredMavenVersion>3.5.0</requiredMavenVersion>
+          </configuration>
         </plugin>
         <plugin>
           <groupId>org.jacoco</groupId>

@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import com.sqlcompat.core.util.Io;
 
 /**
  * 把一套用例同时跑在 MySQL 与 PostgreSQL 上，报告其中有多少是一致的。
@@ -54,9 +55,9 @@ public final class DualDbComparator {
 
     private void applySetup(DbProbe mysqlProbe, DbProbe postgresProbe, Path setupSql)
             throws IOException, SQLException {
-        String script = Files.readString(setupSql, StandardCharsets.UTF_8);
+        String script = Io.readString(setupSql, StandardCharsets.UTF_8);
         for (String statement : script.split(";")) {
-            String sql = stripComments(statement).strip();
+            String sql = stripComments(statement).trim();
             if (sql.isEmpty()) {
                 continue;
             }
@@ -83,7 +84,7 @@ public final class DualDbComparator {
                 detail.append("mysql: ").append(left.error());
             }
             if (right.failed()) {
-                if (!detail.isEmpty()) {
+                if (detail.length() > 0) {
                     detail.append(" | ");
                 }
                 detail.append("postgres: ").append(right.error());
@@ -99,7 +100,7 @@ public final class DualDbComparator {
     private String stripComments(String chunk) {
         StringBuilder sb = new StringBuilder(chunk.length());
         for (String line : chunk.split("\\R")) {
-            if (line.stripLeading().startsWith("--")) {
+            if (line.trim().startsWith("--")) {
                 continue;
             }
             sb.append(line).append('\n');

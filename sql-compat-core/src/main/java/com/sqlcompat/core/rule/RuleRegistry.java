@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.Collections;
 
 /**
  * 当前生效的规则集合。
@@ -45,7 +46,7 @@ public final class RuleRegistry {
     }
 
     public List<DialectRule> rules() {
-        return List.copyOf(rules);
+        return java.util.Collections.unmodifiableList(new java.util.ArrayList<>(rules));
     }
 
     /** 返回忽略指定编号后的新注册表；用于在报告里屏蔽某条规则（如 foreach 密集项目的 R011）。 */
@@ -57,7 +58,7 @@ public final class RuleRegistry {
                 .filter(Objects::nonNull)
                 .map(id -> id.trim().toUpperCase(Locale.ROOT))
                 .filter(id -> !id.isEmpty())
-                .collect(Collectors.toUnmodifiableSet());
+                .collect(java.util.stream.Collectors.collectingAndThen(java.util.stream.Collectors.toCollection(java.util.LinkedHashSet::new), java.util.Collections::unmodifiableSet));
         RuleRegistry filtered = new RuleRegistry();
         rules.stream()
                 .filter(rule -> !skip.contains(rule.id().toUpperCase(Locale.ROOT)))

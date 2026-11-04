@@ -20,9 +20,9 @@ class IfnullRuleTest {
                 "SELECT IFNULL(a.name, 'x') FROM demo_asset a WHERE a.id = 1");
 
         assertThat(issues).hasSize(1);
-        assertThat(issues.getFirst().ruleId()).isEqualTo("R001");
-        assertThat(issues.getFirst().severity().name()).isEqualTo("BLOCKER");
-        assertThat(issues.getFirst().suggestion()).contains("COALESCE");
+        assertThat(issues.get(0).ruleId()).isEqualTo("R001");
+        assertThat(issues.get(0).severity().name()).isEqualTo("BLOCKER");
+        assertThat(issues.get(0).suggestion()).contains("COALESCE");
     }
 
     @Test

@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import com.sqlcompat.core.util.J8;
 
 /**
  * 规则接口的**默认契约**。
@@ -21,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class DialectRuleDefaultsTest {
 
     /** 只实现必修方法的规则，其余走默认值。 */
-    private record MinimalRule() implements DialectRule {
+    private static final class MinimalRule implements DialectRule {
         @Override
         public String id() {
             return "R900";
@@ -44,7 +45,7 @@ class DialectRuleDefaultsTest {
 
         @Override
         public List<Issue> check(RuleContext context) {
-            return List.of();
+            return J8.list();
         }
     }
 

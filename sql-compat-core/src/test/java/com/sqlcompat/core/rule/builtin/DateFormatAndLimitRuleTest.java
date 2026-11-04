@@ -18,8 +18,8 @@ class DateFormatAndLimitRuleTest {
                 "SELECT DATE_FORMAT(a.created_at, '%Y-%m-%d') FROM demo_asset a");
 
         assertThat(issues).hasSize(1);
-        assertThat(issues.getFirst().ruleId()).isEqualTo("R002");
-        assertThat(issues.getFirst().suggestion()).contains("TO_CHAR");
+        assertThat(issues.get(0).ruleId()).isEqualTo("R002");
+        assertThat(issues.get(0).suggestion()).contains("TO_CHAR");
     }
 
     @Test
@@ -29,7 +29,7 @@ class DateFormatAndLimitRuleTest {
                 "DELETE FROM demo_task WHERE created_at < '2024-01-01' LIMIT 1000");
 
         assertThat(issues).hasSize(1);
-        assertThat(issues.getFirst().ruleId()).isEqualTo("R003");
+        assertThat(issues.get(0).ruleId()).isEqualTo("R003");
     }
 
     @Test

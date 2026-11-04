@@ -51,7 +51,7 @@ public final class BacktickQuoteRule implements DialectRule {
 
     @Override
     public List<Issue> check(RuleContext context) {
-        var matcher = PATTERN.matcher(context.sql());
+        Matcher matcher = PATTERN.matcher(context.sql());
         List<Issue> issues = new ArrayList<>();
         while (matcher.find()) {
             String snippet = matcher.group();
@@ -82,9 +82,13 @@ public final class BacktickQuoteRule implements DialectRule {
 
     @Override
     public String fix(String sql) {
-        return PATTERN.matcher(sql).replaceAll(match -> {
-            String inner = match.group().substring(1, match.group().length() - 1);
-            return "\"" + inner + "\"";
-        });
+        Matcher matcher = PATTERN.matcher(sql);
+        StringBuffer out = new StringBuffer();
+        while (matcher.find()) {
+            String inner = matcher.group().substring(1, matcher.group().length() - 1);
+            matcher.appendReplacement(out, Matcher.quoteReplacement("\"" + inner + "\""));
+        }
+        matcher.appendTail(out);
+        return out.toString();
     }
 }

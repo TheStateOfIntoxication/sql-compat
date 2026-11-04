@@ -24,6 +24,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
+import com.sqlcompat.core.util.J8;
+import com.sqlcompat.core.util.Io;
+import java.util.LinkedHashSet;
+import java.util.Collections;
 
 /**
  * 扫描一个文件或一棵目录树，产出 {@link Report}。
@@ -41,17 +45,17 @@ public final class CompatEngine {
     private final SqlParserFacade sqlParser = new SqlParserFacade();
 
     public CompatEngine(RuleRegistry registry) {
-        this(registry, Set.of());
+        this(registry, J8.set());
     }
 
     /** @param ignoredRuleIds 需要屏蔽的规则编号；含 {@link #PARSE_ISSUE_RULE_ID} 时不再报解析失败 */
     public CompatEngine(RuleRegistry registry, Set<String> ignoredRuleIds) {
         this.registry = registry;
-        this.ignoredRuleIds = ignoredRuleIds == null ? Set.of() : Set.copyOf(ignoredRuleIds);
+        this.ignoredRuleIds = ignoredRuleIds == null ? J8.set() : java.util.Collections.unmodifiableSet(new java.util.LinkedHashSet<>(ignoredRuleIds));
     }
 
     public CompatEngine() {
-        this(RuleRegistry.defaults(), Set.of());
+        this(RuleRegistry.defaults(), J8.set());
     }
 
     public Report scan(Path input, String sourceDialect, String targetDialect) throws IOException {
@@ -97,7 +101,7 @@ public final class CompatEngine {
     }
 
     private String firstLine(String sql) {
-        String oneLine = sql.replaceAll("\\s+", " ").strip();
+        String oneLine = sql.replaceAll("\\s+", " ").trim();
         return oneLine.length() > 120 ? oneLine.substring(0, 117) + "..." : oneLine;
     }
 
@@ -142,11 +146,11 @@ public final class CompatEngine {
     }
 
     private List<SqlStatement> parseSqlFile(Path file) throws IOException {
-        String content = Files.readString(file, StandardCharsets.UTF_8);
+        String content = Io.readString(file, StandardCharsets.UTF_8);
         List<SqlStatement> result = new ArrayList<>();
         String[] parts = content.split(";");
         for (int i = 0; i < parts.length; i++) {
-            String sql = stripLineComments(parts[i]).strip();
+            String sql = stripLineComments(parts[i]).trim();
             if (sql.isEmpty()) {
                 continue;
             }
@@ -169,7 +173,7 @@ public final class CompatEngine {
     private String stripLineComments(String chunk) {
         StringBuilder sb = new StringBuilder(chunk.length());
         for (String line : chunk.split("\\R")) {
-            if (line.stripLeading().startsWith("--")) {
+            if (line.trim().startsWith("--")) {
                 continue;
             }
             sb.append(line).append('\n');

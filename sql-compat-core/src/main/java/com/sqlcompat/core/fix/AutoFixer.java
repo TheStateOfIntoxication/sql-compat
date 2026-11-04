@@ -10,6 +10,9 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
+import com.sqlcompat.core.util.J8;
+import com.sqlcompat.core.util.Io;
+import java.util.Locale;
 
 /**
  * 按规则集对文件做自动改写。
@@ -20,7 +23,35 @@ import java.util.stream.Stream;
 public final class AutoFixer {
 
     /** 一份文件的改写结果。 */
-    public record FixResult(Path source, String original, String fixed, List<String> appliedRuleIds) {
+    public static final class FixResult {
+
+        private final Path source;
+        private final String original;
+        private final String fixed;
+        private final List<String> appliedRuleIds;
+
+        public FixResult(Path source, String original, String fixed, List<String> appliedRuleIds) {
+            this.source = source;
+            this.original = original;
+            this.fixed = fixed;
+            this.appliedRuleIds = appliedRuleIds;
+        }
+
+        public Path source() {
+            return source;
+        }
+
+        public String original() {
+            return original;
+        }
+
+        public String fixed() {
+            return fixed;
+        }
+
+        public List<String> appliedRuleIds() {
+            return appliedRuleIds;
+        }
 
         public boolean changed() {
             return !original.equals(fixed);
@@ -59,12 +90,12 @@ public final class AutoFixer {
         Path root = Files.isDirectory(input) ? input : input.getParent();
         List<FixResult> results = new ArrayList<>();
         for (Path source : sources) {
-            String content = Files.readString(source, StandardCharsets.UTF_8);
+            String content = Io.readString(source, StandardCharsets.UTF_8);
             FixResult result = fixContent(source, content);
             Path relative = root == null ? source.getFileName() : root.relativize(source);
             Path target = outputDir.resolve(relative);
             Files.createDirectories(target.getParent());
-            Files.writeString(target, result.fixed(), StandardCharsets.UTF_8);
+            Io.writeString(target, result.fixed(), StandardCharsets.UTF_8);
             results.add(result);
         }
         return results;
@@ -72,7 +103,7 @@ public final class AutoFixer {
 
     private List<Path> collect(Path input) throws IOException {
         if (Files.isRegularFile(input)) {
-            return List.of(input);
+            return J8.list(input);
         }
         try (Stream<Path> walk = Files.walk(input)) {
             return walk.filter(Files::isRegularFile)
@@ -81,18 +112,18 @@ public final class AutoFixer {
                         return name.endsWith(".xml") || name.endsWith(".sql");
                     })
                     .sorted()
-                    .toList();
+                    .collect(java.util.stream.Collectors.toList());
         }
     }
 
     private List<DialectRule> activeRules() {
         if (mode == FixMode.OFF) {
-            return List.of();
+            return J8.list();
         }
         return registry.rules().stream()
                 .filter(DialectRule::fixable)
                 .filter(rule -> mode == FixMode.INCLUDE_REVIEW
                         || rule.fixSafety() == FixSafety.SAFE)
-                .toList();
+                .collect(java.util.stream.Collectors.toList());
     }
 }

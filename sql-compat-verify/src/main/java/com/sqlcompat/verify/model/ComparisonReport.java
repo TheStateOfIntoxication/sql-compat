@@ -1,18 +1,36 @@
 package com.sqlcompat.verify.model;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 /**
  * 一次完整一致性对比的结果。
  */
-public record ComparisonReport(
-        String mysqlLabel,
-        String postgresLabel,
-        List<CaseOutcome> outcomes) {
+public final class ComparisonReport {
 
-    public ComparisonReport {
-        outcomes = List.copyOf(outcomes);
+    private final String mysqlLabel;
+    private final String postgresLabel;
+    private final List<CaseOutcome> outcomes;
+
+    public ComparisonReport(String mysqlLabel, String postgresLabel, List<CaseOutcome> outcomes) {
+        this.mysqlLabel = mysqlLabel;
+        this.postgresLabel = postgresLabel;
+        this.outcomes = Collections.unmodifiableList(new ArrayList<>(outcomes));
+    }
+
+    public String mysqlLabel() {
+        return mysqlLabel;
+    }
+
+    public String postgresLabel() {
+        return postgresLabel;
+    }
+
+    public List<CaseOutcome> outcomes() {
+        return outcomes;
     }
 
     public int caseCount() {
@@ -53,5 +71,29 @@ public record ComparisonReport(
 
     public long postgresTotalMillis() {
         return outcomes.stream().mapToLong(o -> o.postgres().millis()).sum();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof ComparisonReport)) {
+            return false;
+        }
+        ComparisonReport that = (ComparisonReport) o;
+        return Objects.equals(mysqlLabel, that.mysqlLabel)
+                && Objects.equals(postgresLabel, that.postgresLabel)
+                && outcomes.equals(that.outcomes);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(mysqlLabel, postgresLabel, outcomes);
+    }
+
+    @Override
+    public String toString() {
+        return "ComparisonReport[" + caseCount() + " cases, " + consistencyRateText() + "]";
     }
 }

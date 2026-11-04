@@ -19,6 +19,15 @@
   </description>
 
   <dependencies>
+    <!--
+      复用 core 的两个 JDK 8 兼容工具：Io（读写文件）与 J8（集合工厂）。
+      它们是「本模块也能在 JDK 8 上编译」的前提，不是顺手引用。
+    -->
+    <dependency>
+      <groupId>io.github.sqlcompat</groupId>
+      <artifactId>sql-compat-core</artifactId>
+    </dependency>
+
     <dependency>
       <groupId>com.mysql</groupId>
       <artifactId>mysql-connector-j</artifactId>

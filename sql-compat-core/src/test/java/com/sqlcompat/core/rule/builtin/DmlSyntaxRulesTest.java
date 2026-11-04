@@ -30,8 +30,8 @@ class DmlSyntaxRulesTest {
                     "SELECT a.id FROM demo_asset a ORDER BY a.id LIMIT 10, 20");
 
             assertThat(issues).hasSize(1);
-            assertThat(issues.getFirst().ruleId()).isEqualTo("R004");
-            assertThat(issues.getFirst().suggestion()).isEqualTo("LIMIT 20 OFFSET 10");
+            assertThat(issues.get(0).ruleId()).isEqualTo("R004");
+            assertThat(issues.get(0).suggestion()).isEqualTo("LIMIT 20 OFFSET 10");
         }
 
         @Test
@@ -41,7 +41,7 @@ class DmlSyntaxRulesTest {
                     "SELECT a.id FROM demo_asset a LIMIT #{offset}, #{pageSize}");
 
             assertThat(issues).hasSize(1);
-            assertThat(issues.getFirst().suggestion()).isEqualTo("LIMIT #{pageSize} OFFSET #{offset}");
+            assertThat(issues.get(0).suggestion()).isEqualTo("LIMIT #{pageSize} OFFSET #{offset}");
         }
 
         @Test
@@ -76,8 +76,8 @@ class DmlSyntaxRulesTest {
                     "INSERT IGNORE INTO demo_asset (id, name) VALUES (1, 'a')");
 
             assertThat(issues).hasSize(1);
-            assertThat(issues.getFirst().ruleId()).isEqualTo("R005");
-            assertThat(issues.getFirst().message()).contains("数据错误");
+            assertThat(issues.get(0).ruleId()).isEqualTo("R005");
+            assertThat(issues.get(0).message()).contains("数据错误");
         }
 
         @Test
@@ -104,8 +104,8 @@ class DmlSyntaxRulesTest {
                             + "ON DUPLICATE KEY UPDATE name = VALUES(name)");
 
             assertThat(issues).hasSize(1);
-            assertThat(issues.getFirst().ruleId()).isEqualTo("R006");
-            assertThat(issues.getFirst().message()).contains("EXCLUDED.name");
+            assertThat(issues.get(0).ruleId()).isEqualTo("R006");
+            assertThat(issues.get(0).message()).contains("EXCLUDED.name");
         }
 
         @Test
@@ -116,7 +116,7 @@ class DmlSyntaxRulesTest {
                             + "ON DUPLICATE KEY UPDATE name = 'b'");
 
             assertThat(issues).hasSize(1);
-            assertThat(issues.getFirst().message()).contains("强制");
+            assertThat(issues.get(0).message()).contains("强制");
         }
 
         @Test
@@ -143,8 +143,8 @@ class DmlSyntaxRulesTest {
                     "CREATE TABLE demo_asset (id BIGINT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(64))");
 
             assertThat(issues).hasSize(1);
-            assertThat(issues.getFirst().ruleId()).isEqualTo("R007");
-            assertThat(issues.getFirst().message()).contains("序列");
+            assertThat(issues.get(0).ruleId()).isEqualTo("R007");
+            assertThat(issues.get(0).message()).contains("序列");
         }
 
         @Test
@@ -170,8 +170,8 @@ class DmlSyntaxRulesTest {
                     "REPLACE INTO demo_asset (id, name) VALUES (1, 'a')");
 
             assertThat(issues).hasSize(1);
-            assertThat(issues.getFirst().ruleId()).isEqualTo("R019");
-            assertThat(issues.getFirst().message()).contains("先删后插");
+            assertThat(issues.get(0).ruleId()).isEqualTo("R019");
+            assertThat(issues.get(0).message()).contains("先删后插");
         }
 
         @Test

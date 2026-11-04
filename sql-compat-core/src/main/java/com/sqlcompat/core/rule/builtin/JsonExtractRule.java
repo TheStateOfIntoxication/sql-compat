@@ -82,7 +82,13 @@ public final class JsonExtractRule implements DialectRule {
         // 只处理单层路径 $.key，多级路径要拆成链式 ->>，留给人工。
         Pattern call = Pattern.compile("\\bjson_extract\\s*\\(([^(),]+?)\\s*,\\s*'\\$\\.([A-Za-z0-9_]+)'\\s*\\)",
                 Pattern.CASE_INSENSITIVE);
-        return call.matcher(sql).replaceAll(match ->
-                match.group(1).strip() + " ->> '" + match.group(2) + "'");
+        Matcher matcher = call.matcher(sql);
+        StringBuffer out = new StringBuffer();
+        while (matcher.find()) {
+            String replacement = matcher.group(1).trim() + " ->> '" + matcher.group(2) + "'";
+            matcher.appendReplacement(out, Matcher.quoteReplacement(replacement));
+        }
+        matcher.appendTail(out);
+        return out.toString();
     }
 }

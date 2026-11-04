@@ -2,6 +2,7 @@ package com.sqlcompat.core.parser;
 
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.statement.Statement;
+import java.util.Locale;
 
 /**
  * 对 JSQLParser 的薄封装，保证**永不抛异常**。
@@ -10,25 +11,41 @@ import net.sf.jsqlparser.statement.Statement;
  */
 public final class SqlParserFacade {
 
-    /**
-     * @param ast   解析出的语句，失败为 {@code null}
-     * @param error 失败原因，成功为 {@code null}
-     */
-    public record ParseOutcome(Statement ast, String error) {
+    /** 解析结果：成功给 AST，失败给原因，二者必有一个为 null。 */
+    public static final class ParseOutcome {
+
+        private final Statement ast;
+        private final String error;
+
+        public ParseOutcome(Statement ast, String error) {
+            this.ast = ast;
+            this.error = error;
+        }
+
+        /** 解析出的语句，失败为 {@code null}。 */
+        public Statement ast() {
+            return ast;
+        }
+
+        /** 失败原因，成功为 {@code null}。 */
+        public String error() {
+            return error;
+        }
+
         public boolean ok() {
             return ast != null;
         }
     }
 
     public ParseOutcome parse(String sql) {
-        if (sql == null || sql.isBlank()) {
+        if (sql == null || sql.trim().isEmpty()) {
             return new ParseOutcome(null, "空语句");
         }
         try {
             return new ParseOutcome(CCJSqlParserUtil.parse(sanitize(sql)), null);
         } catch (Exception e) {
             String msg = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
-            return new ParseOutcome(null, msg.lines().findFirst().orElse(msg));
+            return new ParseOutcome(null, msg.split("\r?\n", 2)[0]);
         }
     }
 
@@ -55,17 +72,21 @@ public final class SqlParserFacade {
                 // 包在双引号里的拼接占位符（其它位置），避免变成 "t"
                 .replaceAll("\"[^\"]*\\$\\{[^}]*}[^\"]*\"", "t")
                 // 相邻（中间只有空白）的多个 ${}，整体折叠成一个标识符
+                  // MySQL 的 NULL 安全等于 <=>：JSQLParser 4.x 的词法表里没有这个运算符，
+                  // 会在解析阶段直接报错。AST 只用于统计解析成功率、不参与改写，
+                  // 所以先换成普通等号再解析，避免 R016 这类语句每条都多一条无意义的 PARSE 记录。
+                  .replace("<" + "=>", "=")
                 .replaceAll("(?:\\$\\{[^}]*\\}\\s*){2,}", "t ")
                 .replaceAll("#\\{[^}]*}", "?")
                 .replaceAll("\\$\\{[^}]*}", "t");
-        String stripped = text.strip();
+        String stripped = text.trim();
         if (stripped.regionMatches(true, 0, "begin", 0, 5)
                 && (stripped.length() == 5 || !Character.isLetterOrDigit(stripped.charAt(5)))) {
-            stripped = stripped.substring(5).strip();
+            stripped = stripped.substring(5).trim();
             if (stripped.toLowerCase(java.util.Locale.ROOT).endsWith(" end")) {
-                stripped = stripped.substring(0, stripped.length() - 4).strip();
+                stripped = stripped.substring(0, stripped.length() - 4).trim();
             } else if (stripped.toLowerCase(java.util.Locale.ROOT).endsWith("\nend")) {
-                stripped = stripped.substring(0, stripped.length() - 4).strip();
+                stripped = stripped.substring(0, stripped.length() - 4).trim();
             }
         }
         return stripped;

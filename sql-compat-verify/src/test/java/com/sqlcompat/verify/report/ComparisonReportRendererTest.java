@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import com.sqlcompat.core.util.J8;
 
 /**
  * 一致性报告要能被**外部人**读懂：拿到一份 .md 的人，不该从「一致率 80%」推断出「工具有问题」。
@@ -22,13 +23,13 @@ class ComparisonReportRendererTest {
     private final ComparisonReportRenderer renderer = new ComparisonReportRenderer();
 
     private static QueryOutcome ok(long millis) {
-        return new QueryOutcome(List.of(), millis, null);
+        return new QueryOutcome(J8.list(), millis, null);
     }
 
     private static ComparisonReport report() {
         SqlCase same = new SqlCase("01_ok", "SELECT 1", true);
         SqlCase diff = new SqlCase("07_null_order", "SELECT owner_id FROM t ORDER BY owner_id", true);
-        List<CaseOutcome> outcomes = List.of(
+        List<CaseOutcome> outcomes = J8.list(
                 new CaseOutcome(same, Status.CONSISTENT, null, ok(1), ok(0)),
                 new CaseOutcome(diff, Status.DIFFERENT,
                         "第 0 行第 0 列不同：mysql='<null>'，postgres='1'", ok(1), ok(0)));

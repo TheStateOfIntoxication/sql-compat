@@ -10,6 +10,10 @@ import java.nio.file.Path;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import com.sqlcompat.core.util.J8;
+import com.sqlcompat.core.util.Io;
+import java.nio.file.Paths;
+import java.util.regex.Matcher;
 
 /**
  * 插件的两个前置判断：include 通配符与"这到底是不是 mapper"。
@@ -22,56 +26,56 @@ class GlobMatcherAndSnifferTest {
     @Test
     @DisplayName("** 跨目录、* 不跨目录")
     void globSemantics() {
-        GlobMatcher matcher = GlobMatcher.of(List.of("**/*.xml"));
+        GlobMatcher matcher = GlobMatcher.of(J8.list("**/*.xml"));
 
-        assertThat(matcher.matches(Path.of("DemoMapper.xml"))).isTrue();
-        assertThat(matcher.matches(Path.of("mapper", "DemoMapper.xml"))).isTrue();
-        assertThat(matcher.matches(Path.of("a", "b", "c", "DemoMapper.xml"))).isTrue();
-        assertThat(matcher.matches(Path.of("mapper", "DemoMapper.sql"))).isFalse();
+        assertThat(matcher.matches(Paths.get("DemoMapper.xml"))).isTrue();
+        assertThat(matcher.matches(Paths.get("mapper", "DemoMapper.xml"))).isTrue();
+        assertThat(matcher.matches(Paths.get("a", "b", "c", "DemoMapper.xml"))).isTrue();
+        assertThat(matcher.matches(Paths.get("mapper", "DemoMapper.sql"))).isFalse();
     }
 
     @Test
     @DisplayName("单层 * 不跨目录")
     void singleStarDoesNotCrossDirectories() {
-        GlobMatcher matcher = GlobMatcher.of(List.of("mapper/*.xml"));
+        GlobMatcher matcher = GlobMatcher.of(J8.list("mapper/*.xml"));
 
-        assertThat(matcher.matches(Path.of("mapper", "DemoMapper.xml"))).isTrue();
-        assertThat(matcher.matches(Path.of("mapper", "sub", "DemoMapper.xml"))).isFalse();
+        assertThat(matcher.matches(Paths.get("mapper", "DemoMapper.xml"))).isTrue();
+        assertThat(matcher.matches(Paths.get("mapper", "sub", "DemoMapper.xml"))).isFalse();
     }
 
     @Test
     @DisplayName("多个 include 命中其一即可")
     void multipleIncludes() {
-        GlobMatcher matcher = GlobMatcher.of(List.of("**/Demo*.xml", "**/*.sql"));
+        GlobMatcher matcher = GlobMatcher.of(J8.list("**/Demo*.xml", "**/*.sql"));
 
-        assertThat(matcher.matches(Path.of("mapper", "DemoMapper.xml"))).isTrue();
-        assertThat(matcher.matches(Path.of("mapper", "Other.xml"))).isFalse();
-        assertThat(matcher.matches(Path.of("sql", "legacy.sql"))).isTrue();
+        assertThat(matcher.matches(Paths.get("mapper", "DemoMapper.xml"))).isTrue();
+        assertThat(matcher.matches(Paths.get("mapper", "Other.xml"))).isFalse();
+        assertThat(matcher.matches(Paths.get("sql", "legacy.sql"))).isTrue();
     }
 
     @Test
     @DisplayName("Windows 反斜杠路径也能匹配")
     void windowsPathsAreNormalized() {
-        GlobMatcher matcher = GlobMatcher.of(List.of("**/*.xml"));
+        GlobMatcher matcher = GlobMatcher.of(J8.list("**/*.xml"));
 
-        assertThat(matcher.matches(Path.of("D:", "work", "mapper", "DemoMapper.xml"))).isTrue();
+        assertThat(matcher.matches(Paths.get("D:", "work", "mapper", "DemoMapper.xml"))).isTrue();
     }
 
     @Test
     @DisplayName("没配 include 时一律放行")
     void emptyIncludesMatchEverything() {
-        assertThat(GlobMatcher.of(List.of()).matches(Path.of("any", "thing.xml"))).isTrue();
-        assertThat(GlobMatcher.of(null).matches(Path.of("any", "thing.sql"))).isTrue();
+        assertThat(GlobMatcher.of(J8.list()).matches(Paths.get("any", "thing.xml"))).isTrue();
+        assertThat(GlobMatcher.of(null).matches(Paths.get("any", "thing.sql"))).isTrue();
     }
 
     @Test
     @DisplayName("只有带 <mapper 的 XML 才算 mapper，logback.xml 不算")
     void snifferRecognisesMapperXml(@TempDir Path dir) throws IOException {
-        Path mapper = Files.writeString(dir.resolve("DemoMapper.xml"),
+        Path mapper = Io.writeString(dir.resolve("DemoMapper.xml"),
                 "<mapper namespace=\"demo\">\n</mapper>");
-        Path logback = Files.writeString(dir.resolve("logback.xml"),
+        Path logback = Io.writeString(dir.resolve("logback.xml"),
                 "<configuration><appender name=\"A\"/></configuration>");
-        Path sql = Files.writeString(dir.resolve("legacy.sql"), "SELECT 1;");
+        Path sql = Io.writeString(dir.resolve("legacy.sql"), "SELECT 1;");
 
         assertThat(MapperSniffer.looksLikeMapper(mapper)).isTrue();
         assertThat(MapperSniffer.looksLikeMapper(logback)).isFalse();
@@ -82,7 +86,7 @@ class GlobMatcherAndSnifferTest {
     @DisplayName("带注释与 BOM 的 mapper 也能识别")
     void snifferHandlesBomAndComments(@TempDir Path dir) throws IOException {
         String content = "\uFEFF<?xml version=\"1.0\"?>\n<!-- 注释 -->\n<!DOCTYPE mapper>\n<mapper namespace=\"demo\"/>";
-        Path file = Files.writeString(dir.resolve("WithBom.xml"), content);
+        Path file = Io.writeString(dir.resolve("WithBom.xml"), content);
 
         assertThat(MapperSniffer.looksLikeMapper(file)).isTrue();
     }
@@ -90,7 +94,7 @@ class GlobMatcherAndSnifferTest {
     @Test
     @DisplayName("非 xml / sql 后缀直接排除")
     void snifferRejectsOtherExtensions(@TempDir Path dir) throws IOException {
-        Path text = Files.writeString(dir.resolve("readme.txt"), "<mapper/>");
+        Path text = Io.writeString(dir.resolve("readme.txt"), "<mapper/>");
 
         assertThat(MapperSniffer.looksLikeMapper(text)).isFalse();
     }

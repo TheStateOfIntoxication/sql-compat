@@ -1,22 +1,54 @@
 package com.sqlcompat.core.model;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.ArrayList;
 
 /**
  * 一次完整扫描的输出，交由 {@code ReportRenderer} 渲染。
  */
-public record Report(
-        String target,
-        String sourceDialect,
-        String targetDialect,
-        List<ScanResult> results,
-        Duration elapsed) {
+public final class Report {
 
-    public Report {
-        results = List.copyOf(results);
+    private final String target;
+    private final String sourceDialect;
+    private final String targetDialect;
+    private final List<ScanResult> results;
+    private final Duration elapsed;
+
+    public Report(String target,
+                  String sourceDialect,
+                  String targetDialect,
+                  List<ScanResult> results,
+                  Duration elapsed) {
+        this.target = target;
+        this.sourceDialect = sourceDialect;
+        this.targetDialect = targetDialect;
+        this.results = Collections.unmodifiableList(new ArrayList<>(results));
+        this.elapsed = elapsed;
+    }
+
+    public String target() {
+        return target;
+    }
+
+    public String sourceDialect() {
+        return sourceDialect;
+    }
+
+    public String targetDialect() {
+        return targetDialect;
+    }
+
+    public List<ScanResult> results() {
+        return results;
+    }
+
+    public Duration elapsed() {
+        return elapsed;
     }
 
     public int statementCount() {
@@ -53,5 +85,31 @@ public record Report(
             }
         }
         return worst;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof Report)) {
+            return false;
+        }
+        Report that = (Report) o;
+        return Objects.equals(target, that.target)
+                && Objects.equals(sourceDialect, that.sourceDialect)
+                && Objects.equals(targetDialect, that.targetDialect)
+                && results.equals(that.results)
+                && Objects.equals(elapsed, that.elapsed);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(target, sourceDialect, targetDialect, results, elapsed);
+    }
+
+    @Override
+    public String toString() {
+        return "Report[" + statementCount() + " statements, " + issueCount() + " issues]";
     }
 }

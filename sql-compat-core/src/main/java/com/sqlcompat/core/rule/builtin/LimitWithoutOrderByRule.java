@@ -6,6 +6,7 @@ import com.sqlcompat.core.rule.DialectRule;
 import com.sqlcompat.core.rule.RuleContext;
 
 import java.util.List;
+import com.sqlcompat.core.util.J8;
 
 /**
  * R010 —— 带 {@code LIMIT} 却没有 {@code ORDER BY}。
@@ -48,9 +49,9 @@ public final class LimitWithoutOrderByRule implements DialectRule {
     public List<Issue> check(RuleContext context) {
         String lower = context.lowerCaseSql();
         if (!lower.contains("limit") || lower.contains("order by")) {
-            return List.of();
+            return J8.list();
         }
-        return List.of(new Issue(
+        return J8.list(new Issue(
                 id(),
                 name(),
                 defaultSeverity(),

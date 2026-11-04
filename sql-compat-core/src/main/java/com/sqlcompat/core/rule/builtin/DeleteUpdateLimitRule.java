@@ -1,5 +1,7 @@
 package com.sqlcompat.core.rule.builtin;
 
+import java.util.regex.Matcher;
+
 import com.sqlcompat.core.model.Issue;
 import com.sqlcompat.core.model.Severity;
 import com.sqlcompat.core.rule.DialectRule;
@@ -7,6 +9,7 @@ import com.sqlcompat.core.rule.RuleContext;
 
 import java.util.List;
 import java.util.regex.Pattern;
+import com.sqlcompat.core.util.J8;
 
 /**
  * R003 —— MySQL 允许 {@code DELETE ... LIMIT n} / {@code UPDATE ... LIMIT n}。
@@ -46,12 +49,12 @@ public final class DeleteUpdateLimitRule implements DialectRule {
 
     @Override
     public List<Issue> check(RuleContext context) {
-        var matcher = PATTERN.matcher(context.sql());
+        Matcher matcher = PATTERN.matcher(context.sql());
         if (!matcher.find()) {
-            return List.of();
+            return J8.list();
         }
         String keyword = matcher.group(1).toLowerCase();
-        return List.of(new Issue(
+        return J8.list(new Issue(
                 id(),
                 name(),
                 defaultSeverity(),

@@ -22,6 +22,7 @@ import com.sqlcompat.core.rule.builtin.TinyIntBooleanRule;
 import com.sqlcompat.core.rule.builtin.UpsertRule;
 
 import java.util.List;
+import com.sqlcompat.core.util.J8;
 
 /**
  * 内置规则清单。
@@ -36,7 +37,7 @@ final class BuiltinRules {
     }
 
     static List<DialectRule> all() {
-        return List.of(
+        return J8.list(
                 // 批 1 · 函数类
                 new IfnullRule(),
                 new DateFormatRule(),

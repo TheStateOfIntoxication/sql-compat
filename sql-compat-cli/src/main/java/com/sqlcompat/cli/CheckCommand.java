@@ -20,6 +20,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import com.sqlcompat.core.util.J8;
+import com.sqlcompat.core.util.Io;
+import java.nio.file.Paths;
+import java.util.LinkedHashSet;
+import java.util.Collections;
 
 /**
  * {@code sql-compat check -i ./mappers -o report.html}
@@ -77,7 +82,7 @@ public final class CheckCommand implements Callable<Integer> {
 
         CompatEngine engine = new CompatEngine(
                 RuleRegistry.defaults().excluding(ignore),
-                ignore == null ? Set.of() : Set.copyOf(ignore));
+                ignore == null ? J8.set() : java.util.Collections.unmodifiableSet(new java.util.LinkedHashSet<>(ignore)));
         Report before = engine.scan(input, "MySQL", "Kingbase/PostgreSQL");
 
         Report reported = before;
@@ -88,8 +93,8 @@ public final class CheckCommand implements Callable<Integer> {
 
         Path target = output != null
                 ? output
-                : Path.of("sql-compat-report." + renderer.extension());
-        Files.writeString(target, renderer.render(reported), StandardCharsets.UTF_8);
+                : Paths.get("sql-compat-report." + renderer.extension());
+        Io.writeString(target, renderer.render(reported), StandardCharsets.UTF_8);
 
         printSummary(reported, target);
 
@@ -109,7 +114,7 @@ public final class CheckCommand implements Callable<Integer> {
     }
 
     private Report applyFix(CompatEngine engine, FixMode mode, Report before) throws Exception {
-        Path targetDir = inPlace ? input : (fixOut != null ? fixOut : Path.of("sql-compat-fixed"));
+        Path targetDir = inPlace ? input : (fixOut != null ? fixOut : Paths.get("sql-compat-fixed"));
         List<AutoFixer.FixResult> results = new AutoFixer(
                 RuleRegistry.defaults(), mode).fixTree(input, targetDir);
 
@@ -124,7 +129,7 @@ public final class CheckCommand implements Callable<Integer> {
 
         System.out.printf(Locale.ROOT, "改写完成：%d/%d 个文件有变更，%d 条问题 -> ",
                 changedFiles, results.size(), before.issueCount());
-        System.out.println(appliedRules.stream().distinct().sorted().toList() + " 规则生效");
+        System.out.println(appliedRules.stream().distinct().sorted().collect(java.util.stream.Collectors.toList()) + " 规则生效");
         System.out.println("改写结果已写入 " + targetDir.toAbsolutePath()
                 + (inPlace ? "（原地改写）" : ""));
 

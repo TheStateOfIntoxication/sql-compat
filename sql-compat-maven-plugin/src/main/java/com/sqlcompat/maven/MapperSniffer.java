@@ -1,5 +1,7 @@
 package com.sqlcompat.maven;
 
+import java.io.InputStream;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -39,7 +41,7 @@ final class MapperSniffer {
     }
 
     private static byte[] readHead(Path path) throws IOException {
-        try (var in = Files.newInputStream(path)) {
+        try (InputStream in = Files.newInputStream(path)) {
             byte[] buffer = new byte[SNIFF_BYTES];
             int read = in.read(buffer);
             if (read <= 0) {

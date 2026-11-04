@@ -15,6 +15,8 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Callable;
+import com.sqlcompat.core.util.Io;
+import java.nio.file.Paths;
 
 /**
  * {@code sql-compat verify --mysql-url ... --pg-url ... -c ./cases}
@@ -82,8 +84,8 @@ public final class VerifyCommand implements Callable<Integer> {
         ComparisonReport report = new DualDbComparator(mysql, postgres).compare(setupScript, cases);
 
         ComparisonReportRenderer renderer = new ComparisonReportRenderer();
-        Path target = output != null ? output : Path.of("sql-compat-verify.md");
-        Files.writeString(target, renderer.render(report), StandardCharsets.UTF_8);
+        Path target = output != null ? output : Paths.get("sql-compat-verify.md");
+        Io.writeString(target, renderer.render(report), StandardCharsets.UTF_8);
 
         System.out.println(renderer.summaryLine(report));
         System.out.println("报告已写入 " + target.toAbsolutePath());
@@ -97,10 +99,10 @@ public final class VerifyCommand implements Callable<Integer> {
     }
 
     private String firstNonBlank(String first, String second) {
-        if (first != null && !first.isBlank()) {
+        if (first != null && !first.trim().isEmpty()) {
             return first;
         }
-        return second != null && !second.isBlank() ? second : null;
+        return second != null && !second.trim().isEmpty() ? second : null;
     }
 
     private String nullToEmpty(String value) {

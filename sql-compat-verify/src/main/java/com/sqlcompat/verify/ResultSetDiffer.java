@@ -44,7 +44,7 @@ public final class ResultSetDiffer {
     private List<List<String>> sorted(List<List<String>> rows) {
         return rows.stream()
                 .sorted(Comparator.comparing(row -> String.join("\u0001", row)))
-                .toList();
+                .collect(java.util.stream.Collectors.toList());
     }
 
     private String quote(String value) {

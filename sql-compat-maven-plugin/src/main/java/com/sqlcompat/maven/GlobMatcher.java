@@ -3,6 +3,8 @@ package com.sqlcompat.maven;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.regex.Pattern;
+import com.sqlcompat.core.util.J8;
+import java.util.regex.Matcher;
 
 /**
  * 把 Maven 里的 include 通配符（`**&#47;*.xml` 这一类）翻成正则。
@@ -20,13 +22,13 @@ final class GlobMatcher {
 
     static GlobMatcher of(List<String> globs) {
         if (globs == null || globs.isEmpty()) {
-            return new GlobMatcher(List.of());
+            return new GlobMatcher(J8.list());
         }
         return new GlobMatcher(globs.stream()
                 .map(String::trim)
                 .filter(g -> !g.isEmpty())
                 .map(GlobMatcher::toPattern)
-                .toList());
+                .collect(java.util.stream.Collectors.toList()));
     }
 
     boolean matches(Path path) {
@@ -42,27 +44,35 @@ final class GlobMatcher {
         StringBuilder regex = new StringBuilder();
         for (int i = 0; i < glob.length(); i++) {
             char c = glob.charAt(i);
-            switch (c) {
-                case '*' -> {
-                    if (i + 1 < glob.length() && glob.charAt(i + 1) == '*') {
-                        // `**/` 可以匹配零层目录，`**` 单独出现则跨任意字符
-                        if (i + 2 < glob.length() && glob.charAt(i + 2) == '/') {
-                            regex.append("(?:.*/)?");
-                            i += 2;
-                        } else {
-                            regex.append(".*");
-                            i += 1;
-                        }
+            // 用 if-else 而不是 switch 表达式：switch 表达式是 Java 14 的语法，
+            // 而本插件要能在 JDK 8 的 Maven 里被加载。
+            if (c == '*') {
+                if (i + 1 < glob.length() && glob.charAt(i + 1) == '*') {
+                    // `**/` 可以匹配零层目录，`**` 单独出现则跨任意字符
+                    if (i + 2 < glob.length() && glob.charAt(i + 2) == '/') {
+                        regex.append("(?:.*/)?");
+                        i += 2;
                     } else {
-                        regex.append("[^/]*");
+                        regex.append(".*");
+                        i += 1;
                     }
+                } else {
+                    regex.append("[^/]*");
                 }
-                case '?' -> regex.append("[^/]");
-                case '.', '(', ')', '[', ']', '{', '}', '+', '|', '^', '$', '\\' ->
-                        regex.append('\\').append(c);
-                default -> regex.append(c);
+            } else if (c == '?') {
+                regex.append("[^/]");
+            } else if (isRegexMeta(c)) {
+                regex.append('\\').append(c);
+            } else {
+                regex.append(c);
             }
         }
         return Pattern.compile(regex.toString());
+    }
+
+    /** glob 里要转义的字符，交给正则前先加反斜杠。 */
+    private static boolean isRegexMeta(char c) {
+        return c == '.' || c == '(' || c == ')' || c == '[' || c == ']' || c == '{'
+                || c == '}' || c == '+' || c == '|' || c == '^' || c == '$' || c == '\\';
     }
 }
