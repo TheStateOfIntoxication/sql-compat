@@ -5,7 +5,7 @@
 [![ci](https://github.com/TheStateOfIntoxication/sql-compat/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/TheStateOfIntoxication/sql-compat/actions/workflows/ci.yml)
 [![license](https://img.shields.io/badge/license-MIT-3da639.svg)](LICENSE)
 [![jdk](https://img.shields.io/badge/JDK-8%2B-437291.svg)](https://adoptium.net/)
-[![rules](https://img.shields.io/badge/规则-20%20条-1f6feb.svg)](docs/rules.md)
+[![rules](https://img.shields.io/badge/%E8%A7%84%E5%88%99-20%20%E6%9D%A1-1f6feb.svg)](docs/rules.md)
 
 ---
 
@@ -32,14 +32,19 @@ java -jar sql-compat.jar check -i ./src/main/resources/mappers -o report.html
 java -jar sql-compat.jar verify -c ./cases -s ./setup.sql -o verify.md
 ```
 
-```
-scanned 25 statements in 178 ms
-issues: 50  (blocker=19 major=22 minor=9 info=0)
+```text
+$ java -jar sql-compat.jar check -i ./sql-compat-samples/src/main/resources -o report.html
+扫描 25 条语句，耗时 148 ms
+问题 50 个（blocker=19 major=22 minor=9 info=0）
+报告已写入 report.html
 
-17/20 consistent (85.0%), 3 different, 0 error
+$ java -jar sql-compat.jar verify -c ./cases -s ./setup.sql -o verify.md
+一致 16/20（80.0%），不一致 4，失败 0
+报告已写入 verify.md
 ```
 
-![demo](docs/demo.svg)
+> 那 4 条不一致里，3 条是我故意预埋的方言差异（整数除法、`||` 语义、NULL 排序），1 条是没预埋、
+> 真被运行时对比抓到的 NULL 排序问题 —— 详见 [acceptance-report.md](docs/acceptance-report.md)。
 
 ---
 
