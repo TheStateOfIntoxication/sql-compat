@@ -105,9 +105,13 @@ jobs:
           set -eo pipefail
           java -version
           java -jar target/sql-compat.jar check -i sql-compat-samples/src/main/resources -f md -o jdk8-report.md
-          # 用报告里的数字断言，不依赖控制台文案
-          grep -q "| 25 | 50 |" jdk8-report.md
-          echo "JDK 8 运行通过，且检出结果与基线一致"
+          # 用报告里的数字断言，不依赖控制台文案。
+          # 注意：报告是「一项一行」的表格（| 扫描语句数 | 25 | 与 | 问题数 | 50 | 各占一行），
+          # 写成 "| 25 | 50 |" 永远匹配不到 —— 上一版就是这么把 CI 弄红的。
+          grep -qF '| 扫描语句数 | 25 |' jdk8-report.md
+          grep -qF '| 问题数 | 50 |' jdk8-report.md
+          grep -qF '| 解析失败数 | 0 |' jdk8-report.md
+          echo "JDK 8 运行通过，且检出结果与基线一致（25 条语句 / 50 个问题 / 0 解析失败）"
 
   maven-plugin-smoke:
     name: maven plugin smoke
@@ -136,7 +140,8 @@ jobs:
           sed -i "s/@project.version@/${VERSION}/" /tmp/it/pom.xml
           cd /tmp/it
           mvn -B -ntp verify | tee plugin.log
-          grep -q "sql-compat：扫描" plugin.log
+          # 断言用 ASCII 的 goal 抬头行，不依赖中文输出的编码假设
+          grep -q -- "--- sql-compat:0.1.0-SNAPSHOT:check" plugin.log
           if grep -q "logback.xml" plugin.log; then
             echo "logback.xml 被误当成 mapper"; exit 1
           fi

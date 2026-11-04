@@ -4,7 +4,8 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.regex.Pattern;
 import com.sqlcompat.core.util.J8;
-import java.util.regex.Matcher;
+
+import java.util.stream.Collectors;
 
 /**
  * 把 Maven 里的 include 通配符（`**&#47;*.xml` 这一类）翻成正则。
@@ -28,7 +29,7 @@ final class GlobMatcher {
                 .map(String::trim)
                 .filter(g -> !g.isEmpty())
                 .map(GlobMatcher::toPattern)
-                .collect(java.util.stream.Collectors.toList()));
+                .collect(Collectors.toList()));
     }
 
     boolean matches(Path path) {

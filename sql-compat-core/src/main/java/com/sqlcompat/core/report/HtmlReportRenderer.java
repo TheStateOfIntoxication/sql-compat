@@ -7,6 +7,7 @@ import com.sqlcompat.core.model.Severity;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 自包含 HTML 报告：样式内联、无外部资源、无 JavaScript。
@@ -86,7 +87,7 @@ public final class HtmlReportRenderer implements ReportRenderer {
             sb.append("<p class=\"clean\">未发现兼容性问题。</p>\n");
         }
 
-        List<ScanResult> withIssues = report.results().stream().filter(r -> !r.clean()).collect(java.util.stream.Collectors.toList());
+        List<ScanResult> withIssues = report.results().stream().filter(r -> !r.clean()).collect(Collectors.toList());
         for (ScanResult result : withIssues) {
             sb.append("<div class=\"stmt\">\n<h2>").append(escape(result.statement().qualifiedId()))
                     .append("</h2>\n<div class=\"loc\">")

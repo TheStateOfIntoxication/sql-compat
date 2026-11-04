@@ -18,13 +18,14 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
+
 import java.util.concurrent.Callable;
 import com.sqlcompat.core.util.J8;
 import com.sqlcompat.core.util.Io;
 import java.nio.file.Paths;
 import java.util.LinkedHashSet;
 import java.util.Collections;
+import java.util.stream.Collectors;
 
 /**
  * {@code sql-compat check -i ./mappers -o report.html}
@@ -82,7 +83,7 @@ public final class CheckCommand implements Callable<Integer> {
 
         CompatEngine engine = new CompatEngine(
                 RuleRegistry.defaults().excluding(ignore),
-                ignore == null ? J8.set() : java.util.Collections.unmodifiableSet(new java.util.LinkedHashSet<>(ignore)));
+                ignore == null ? J8.set() : Collections.unmodifiableSet(new LinkedHashSet<>(ignore)));
         Report before = engine.scan(input, "MySQL", "Kingbase/PostgreSQL");
 
         Report reported = before;
@@ -129,7 +130,7 @@ public final class CheckCommand implements Callable<Integer> {
 
         System.out.printf(Locale.ROOT, "改写完成：%d/%d 个文件有变更，%d 条问题 -> ",
                 changedFiles, results.size(), before.issueCount());
-        System.out.println(appliedRules.stream().distinct().sorted().collect(java.util.stream.Collectors.toList()) + " 规则生效");
+        System.out.println(appliedRules.stream().distinct().sorted().collect(Collectors.toList()) + " 规则生效");
         System.out.println("改写结果已写入 " + targetDir.toAbsolutePath()
                 + (inPlace ? "（原地改写）" : ""));
 

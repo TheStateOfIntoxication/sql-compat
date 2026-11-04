@@ -17,7 +17,6 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import com.sqlcompat.core.util.J8;
-import java.util.Locale;
 
 /**
  * 自动改写的正确性与幂等性。

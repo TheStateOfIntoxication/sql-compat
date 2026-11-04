@@ -51,7 +51,7 @@ public final class CompatEngine {
     /** @param ignoredRuleIds 需要屏蔽的规则编号；含 {@link #PARSE_ISSUE_RULE_ID} 时不再报解析失败 */
     public CompatEngine(RuleRegistry registry, Set<String> ignoredRuleIds) {
         this.registry = registry;
-        this.ignoredRuleIds = ignoredRuleIds == null ? J8.set() : java.util.Collections.unmodifiableSet(new java.util.LinkedHashSet<>(ignoredRuleIds));
+        this.ignoredRuleIds = ignoredRuleIds == null ? J8.set() : Collections.unmodifiableSet(new LinkedHashSet<>(ignoredRuleIds));
     }
 
     public CompatEngine() {

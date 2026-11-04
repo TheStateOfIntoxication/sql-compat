@@ -13,7 +13,8 @@ import java.util.Objects;
 import java.util.stream.Stream;
 import com.sqlcompat.core.util.J8;
 import com.sqlcompat.core.util.Io;
-import java.util.Locale;
+
+import java.util.stream.Collectors;
 
 /**
  * 按规则集对文件做自动改写。
@@ -142,7 +143,7 @@ public final class AutoFixer {
                         return name.endsWith(".xml") || name.endsWith(".sql");
                     })
                     .sorted()
-                    .collect(java.util.stream.Collectors.toList());
+                    .collect(Collectors.toList());
         }
     }
 
@@ -154,6 +155,6 @@ public final class AutoFixer {
                 .filter(DialectRule::fixable)
                 .filter(rule -> mode == FixMode.INCLUDE_REVIEW
                         || rule.fixSafety() == FixSafety.SAFE)
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
     }
 }

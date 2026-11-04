@@ -4,7 +4,6 @@ import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.statement.Statement;
 
 import java.util.Objects;
-import java.util.Locale;
 
 /**
  * 对 JSQLParser 的薄封装，保证**永不抛异常**。

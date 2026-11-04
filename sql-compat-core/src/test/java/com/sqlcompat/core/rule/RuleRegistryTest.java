@@ -11,7 +11,6 @@ import java.io.IOException;
 
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import com.sqlcompat.core.util.J8;

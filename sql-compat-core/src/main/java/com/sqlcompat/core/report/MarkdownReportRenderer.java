@@ -7,6 +7,7 @@ import com.sqlcompat.core.model.Severity;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 纯 Markdown 报告：终端里好读，CI 日志里好 diff。
@@ -38,7 +39,7 @@ public final class MarkdownReportRenderer implements ReportRenderer {
         sb.append('\n');
 
         sb.append("## 问题明细\n\n");
-        List<ScanResult> withIssues = report.results().stream().filter(r -> !r.clean()).collect(java.util.stream.Collectors.toList());
+        List<ScanResult> withIssues = report.results().stream().filter(r -> !r.clean()).collect(Collectors.toList());
         if (withIssues.isEmpty()) {
             sb.append("未发现兼容性问题。\n");
             return sb.toString();

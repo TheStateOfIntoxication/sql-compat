@@ -97,9 +97,9 @@ public final class DbProbe implements AutoCloseable {
             for (int c = 1; c <= columnCount; c++) {
                 row.add(ValueNormalizer.normalize(rs.getObject(c)));
             }
-            rows.add(java.util.Collections.unmodifiableList(new java.util.ArrayList<>(row)));
+            rows.add(Collections.unmodifiableList(new ArrayList<>(row)));
         }
-        return java.util.Collections.unmodifiableList(new java.util.ArrayList<>(rows));
+        return Collections.unmodifiableList(new ArrayList<>(rows));
     }
 
     private long median(List<Long> samples) {

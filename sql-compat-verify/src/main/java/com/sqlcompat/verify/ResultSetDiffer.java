@@ -5,6 +5,7 @@ import com.sqlcompat.verify.model.SqlCase;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * 逐单元格比较两侧结果集，并说明第一处差异。
@@ -44,7 +45,7 @@ public final class ResultSetDiffer {
     private List<List<String>> sorted(List<List<String>> rows) {
         return rows.stream()
                 .sorted(Comparator.comparing(row -> String.join("\u0001", row)))
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
     }
 
     private String quote(String value) {

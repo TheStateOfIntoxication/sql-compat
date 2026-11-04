@@ -26,6 +26,7 @@ import com.sqlcompat.core.util.J8;
 import com.sqlcompat.core.util.Io;
 import java.util.LinkedHashSet;
 import java.util.Collections;
+import java.util.stream.Collectors;
 
 /**
  * 把兼容性检查挂到 {@code verify} 阶段。
@@ -146,7 +147,7 @@ public class CheckMojo extends AbstractMojo {
                 .flatMap(value -> J8.list(value.split(",")).stream())
                 .map(String::trim)
                 .filter(value -> !value.isEmpty())
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
         return registry.excluding(ids);
     }
 
@@ -180,6 +181,6 @@ public class CheckMojo extends AbstractMojo {
 
     /** 供测试使用。 */
     Set<String> configuredIgnores() {
-        return ignore == null ? J8.set() : java.util.Collections.unmodifiableSet(new java.util.LinkedHashSet<>(ignore));
+        return ignore == null ? J8.set() : Collections.unmodifiableSet(new LinkedHashSet<>(ignore));
     }
 }

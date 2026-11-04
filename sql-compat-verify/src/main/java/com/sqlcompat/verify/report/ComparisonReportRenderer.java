@@ -6,6 +6,7 @@ import com.sqlcompat.verify.model.Status;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 /**
  * 一致性对比的 Markdown 报告。
@@ -42,7 +43,7 @@ public final class ComparisonReportRenderer {
     private void appendDifferences(StringBuilder sb, ComparisonReport report) {
         List<CaseOutcome> differences = report.outcomes().stream()
                 .filter(o -> o.status() != Status.CONSISTENT)
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
         sb.append("## 差异明细\n\n");
         if (differences.isEmpty()) {
             sb.append("所有用例在两个数据库上返回了相同结果。\n\n");

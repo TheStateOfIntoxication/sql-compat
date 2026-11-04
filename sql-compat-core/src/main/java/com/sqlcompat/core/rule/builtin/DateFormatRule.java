@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import com.sqlcompat.core.util.J8;
-import java.util.Locale;
 
 /**
  * R002 —— MySQL 的 {@code DATE_FORMAT(col, '%Y-%m-%d')}，需要改写为 {@code TO_CHAR}。

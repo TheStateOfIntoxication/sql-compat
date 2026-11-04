@@ -23,7 +23,6 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import com.sqlcompat.core.util.J8;
 import com.sqlcompat.core.util.Io;
-import java.util.regex.Matcher;
 
 /**
  * 从 MyBatis Mapper XML 中抽取语句。
